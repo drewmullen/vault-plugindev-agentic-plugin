@@ -10,6 +10,9 @@ Unit and backend-harness tests only: every test runs against `logical.InmemStora
 and a fake client. No test talks to a real external API (dockertest deferred).
 testify (`require`/`assert`) is allowed and preferred for assertions.
 
+**This skill is self-contained**: write tests from these patterns — do NOT
+read or fetch other plugin codebases.
+
 ## The TDD Boundary in Go
 
 Tests drive the backend through `b.HandleRequest` with **string paths**, so
@@ -75,9 +78,25 @@ type fakeClient struct {
 }
 
 func (f *fakeClient) CreateToken(ctx context.Context, r CreateTokenRequest) (*Token, error) {
-    f.mu.Lock(); defer f.mu.Unlock()
-    if err := f.failOn["CreateToken"]; err != nil { return nil, err }
-    ...
+    f.mu.Lock()
+    defer f.mu.Unlock()
+    if err := f.failOn["CreateToken"]; err != nil {
+        return nil, err
+    }
+    f.created = append(f.created, r)
+    id := fmt.Sprintf("token-%d", len(f.created))
+    f.tokens[id] = true
+    return &Token{ID: id, Value: "fake-secret-" + id}, nil
+}
+
+func (f *fakeClient) DeleteToken(ctx context.Context, id string) error {
+    f.mu.Lock()
+    defer f.mu.Unlock()
+    if err := f.failOn["DeleteToken"]; err != nil {
+        return err
+    }
+    delete(f.tokens, id) // absent id is success — mirrors idempotent revoke
+    return nil
 }
 ```
 

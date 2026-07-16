@@ -34,7 +34,10 @@ public open-source `vault-plugin-secrets-*` repos as authoritative sources.
    testing conventions from public docs/godoc.
 4. **Existing plugins**: Study public open-source secrets engines
    (e.g. `vault-plugin-secrets-openldap`, `vault-plugin-secrets-terraform`)
-   for layout precedent, client seams, and lifecycle handling.
+   for layout precedent, client seams, and lifecycle handling. Extract the
+   pattern ITSELF into the findings — shapes, orderings, field semantics,
+   error handling — so the findings stand alone. Downstream agents never
+   open these codebases; a bare "mirror repo X" pointer is unusable.
 5. **Validate**: Verify findings are consistent across sources; note
    contradictions explicitly.
 6. **Synthesize**: Write structured findings per the output format below.
@@ -79,6 +82,8 @@ orchestrator confirming the file path written.
 - ONE question per instance
 - MUST run in foreground
 - Clean-room: public sources only — never cite private repos or internal docs
+- Findings must be self-contained: describe patterns concretely in the
+  findings body; repo names/URLs belong in Sources as provenance only
 
 ## Context
 

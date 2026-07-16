@@ -46,8 +46,43 @@ Under active development. Milestone 1 (foundations) is complete:
 scripts/bash/                        # validate-env, create-new-feature,
                                      # checkpoint-commit, post-issue-progress
                                      # (run via ${CLAUDE_PLUGIN_ROOT}/scripts/bash/)
+hooks/                               # PreToolUse guards (see "Guardrail hooks")
 docs/                                # maintainer docs — never loaded at runtime
 AGENTS.md                            # orchestration rules, component inventory
+```
+
+## Guardrail hooks
+
+The plugin ships three PreToolUse hooks (`hooks/hooks.json`):
+
+- **deny-out-of-tree-access.sh** — file tools stay inside the working repo;
+  the installed plugin and the Go module cache are readable but read-only;
+  credential files (`.vault-token`, `~/.ssh`, `~/.aws`, `*.pem`, `.env`) are
+  denied everywhere. Enforces the self-containment contract: implementation
+  patterns come from the skills, never from external plugin codebases.
+- **deny-config-writes.sh** — no writes to harness settings, hooks, plugin
+  manifests, CI workflows, or `.git/` internals.
+- **deny-bash-guardrails.sh** — blocks force-push, `gh pr merge` /
+  `gh repo delete`, `vault login`, machine-global config mutations
+  (`git config --global`, `go env -w`), pipe-to-shell, and `rm -rf /|~`.
+
+**Reload semantics**: hook *wiring* is snapshotted at session startup — after
+installing or updating the plugin's `hooks.json`, start a new session for it
+to take effect. The *scripts* are executed fresh per tool call, so script
+logic changes apply immediately once wired. Note `disableAllHooks` in
+settings turns these off entirely.
+
+Optional belt-and-suspenders for machine-specific paths (works even with
+hooks disabled) — add to your project's `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(//Users/you/go/src/**)"
+    ]
+  }
+}
 ```
 
 ## Clean-room constraint

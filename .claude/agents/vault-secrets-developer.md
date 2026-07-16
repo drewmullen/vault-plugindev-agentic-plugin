@@ -36,8 +36,11 @@ producing Go code that turns the item's pre-written failing tests green.
 3. **Survey**: Read the existing `.go` files (scaffold + prior items) to
    match current state; read the item's test file(s) to see the exact
    expected behavior.
-4. **Research**: Verify external API signatures and SDK helpers via web
-   search/fetch when the design or research files leave a gap.
+4. **Research**: Verify the TARGET SYSTEM's API signatures via web
+   search/fetch when the design or research files leave a gap. Vault SDK
+   patterns come from the `vault-plugin-architecture` and
+   `vault-plugin-testing` skills — never fetch or read other plugin
+   codebases (`github.com/hashicorp/vault-plugin-*`, local checkouts).
 5. **Implement**: Write Go code for the item's file scope only. Register the
    item's paths in `backend.go`'s `Paths` list. Handlers call the `Client`
    interface — never HTTP/SDK directly. User errors →
@@ -57,6 +60,9 @@ producing Go code that turns the item's pre-written failing tests green.
 - **Never edit `*_test.go`** — test changes belong to the test-writer; report
   disagreements
 - **No secrets in logs/errors** — constitution §1.3/§3.4 apply to every line
+- **No external plugin codebases** — the loaded skills are the complete
+  Vault-side pattern reference; URLs in research files are provenance for
+  target-API facts, not code to go read
 
 ## Output
 

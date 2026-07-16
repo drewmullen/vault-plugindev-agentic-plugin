@@ -96,7 +96,8 @@ external system, who consumes them, what problem it solves.}
 ### Architectural Decisions
 
 **{Decision title}**: {What was chosen}.
-*Rationale*: {Why, with citation to research or public plugin precedent}.
+*Rationale*: {Why, citing research findings and/or skill sections. Never
+direct implementers to external repos or codebases.}
 *Rejected*: {What was considered and why rejected}.
 
 {Must include a path-topology decision: flat (`config`, `roles/<name>`,

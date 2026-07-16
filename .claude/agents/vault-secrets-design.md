@@ -66,6 +66,12 @@ implementation.
    - §6 has 4-8 items; no section references another by line number
    - If research contradicts a constitution rule, add a
      `[CONSTITUTION DEVIATION]` entry in §7
+   - design.md is self-contained for implementers: no section (especially §6
+     checklist items) directs implementation to external repos, URLs, or
+     other plugin codebases. Target-API facts cite research files; Vault-side
+     patterns are expressed by skill section (e.g. "per
+     `vault-plugin-architecture` § Rotation & WAL"). Precedent plugins may be
+     named in rationale as provenance only — never as something to consult.
 
 6. **Write**: Output to `specs/{FEATURE}/design.md`. Create the directory if
    needed.

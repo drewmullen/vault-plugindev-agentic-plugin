@@ -68,6 +68,8 @@ and `go vet ./...` pass, `go test ./...` fails (unimplemented paths).
 - `t.Skip` only when a scenario is blocked on another checklist item's
   storage side effects — cite the item in the skip message
 - Do not modify `specs/` files
+- **No external plugin codebases** — test patterns come exclusively from
+  the loaded skills
 
 ## Output
 
