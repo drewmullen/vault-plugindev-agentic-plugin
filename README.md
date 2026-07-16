@@ -22,7 +22,7 @@ automation; without one the workflows warn and keep everything local.
 Under active development. Milestone 1 (foundations) is complete:
 
 - [x] **M1 Foundations** — plugin scaffold, `AGENTS.md`, core scripts, issue template, secrets constitution
-- [ ] **M2 Plan workflow** — clarify taxonomy, design template, research/design agents, `/vault-secrets-plan`
+- [x] **M2 Plan workflow** — clarify taxonomy, design template, research/design agents, `/vault-secrets-plan`
 - [ ] **M3 Implement workflow** — architecture/testing knowledge skills, test-writer/developer/validator agents, `/vault-secrets-implement`
 - [ ] **M4+** — auth method workflows, database plugin workflows, e2e evals
 
@@ -32,10 +32,12 @@ Under active development. Milestone 1 (foundations) is complete:
 .claude-plugin/plugin.json           # Claude Code plugin manifest
 .claude/
 ├── CLAUDE.md                        # pointer to AGENTS.md
-├── agents/                          # subagents (M2/M3)
+├── agents/                          # vault-secrets-research, vault-secrets-design (+M3)
 └── skills/
+    ├── vault-secrets-plan/          # orchestrator + references/issue-body-template.md
     ├── vault-secrets-constitution/  # non-negotiable codegen rules (knowledge)
-    └── vault-secrets-plan/          # orchestrator (M2) + references/
+    ├── vault-domain-category/       # clarify-phase ambiguity taxonomy (knowledge)
+    └── vault-secrets-design-template/ # design.md structure (knowledge)
 scripts/bash/                        # validate-env, create-new-feature,
                                      # checkpoint-commit, post-issue-progress
                                      # (run via ${CLAUDE_PLUGIN_ROOT}/scripts/bash/)

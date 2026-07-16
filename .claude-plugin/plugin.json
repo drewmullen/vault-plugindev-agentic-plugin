@@ -8,6 +8,10 @@
     "email": "mullen.drew@gmail.com"
   },
   "skills": "./.claude/skills/",
+  "agents": [
+    "./.claude/agents/vault-secrets-research.md",
+    "./.claude/agents/vault-secrets-design.md"
+  ],
   "keywords": [
     "vault",
     "secrets-engine",

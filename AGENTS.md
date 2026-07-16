@@ -55,7 +55,7 @@ expansion tricks.
 
 | Command                    | Purpose                                                              | Status    |
 | -------------------------- | -------------------------------------------------------------------- | --------- |
-| `/vault-secrets-plan`      | SDD Phases 1-2: Clarify, Research, Design — stops for human approval | Milestone 2 |
+| `/vault-secrets-plan`      | SDD Phases 1-2: Clarify, Research, Design — stops for human approval | Available |
 | `/vault-secrets-implement` | SDD Phases 3-4: TDD implementation + validation, opens PR            | Milestone 3 |
 | `/vault-auth-plan`         | Same, for auth method plugins                                        | Planned   |
 | `/vault-auth-implement`    | Same, for auth method plugins                                        | Planned   |
@@ -64,20 +64,24 @@ expansion tricks.
 
 ## Component Inventory
 
-**Agents** — in `.claude/agents/` (Milestones 2-3; auth/db columns planned):
+**Agents** — in `.claude/agents/` (auth/db columns planned):
 
-| Role        | Secrets                      |
-| ----------- | ---------------------------- |
-| Research    | `vault-secrets-research`     |
-| Design      | `vault-secrets-design`       |
-| Test writer | `vault-secrets-test-writer`  |
-| Developer   | `vault-secrets-developer`    |
-| Validator   | `vault-secrets-validator`    |
+| Role        | Secrets                      | Status      |
+| ----------- | ---------------------------- | ----------- |
+| Research    | `vault-secrets-research`     | Available   |
+| Design      | `vault-secrets-design`       | Available   |
+| Test writer | `vault-secrets-test-writer`  | Milestone 3 |
+| Developer   | `vault-secrets-developer`    | Milestone 3 |
+| Validator   | `vault-secrets-validator`    | Milestone 3 |
 
-**Skills** — in `.claude/skills/` (Milestones 2-3): the workflow orchestrators
-(`vault-secrets-plan`, `vault-secrets-implement`) and knowledge packs
-(`vault-domain-category`, `vault-plugin-architecture`, `vault-plugin-testing`,
-`vault-judge-criteria`, `vault-report-template`).
+**Skills** — in `.claude/skills/`:
+
+- Orchestrators: `vault-secrets-plan` (available), `vault-secrets-implement`
+  (Milestone 3)
+- Knowledge packs: `vault-secrets-constitution`, `vault-domain-category`,
+  `vault-secrets-design-template` (available); `vault-plugin-architecture`,
+  `vault-plugin-testing`, `vault-judge-criteria`, `vault-report-template`
+  (Milestone 3)
 
 ## Packaging Rules
 
@@ -102,7 +106,7 @@ generating, or reviewing secrets engine code.
 
 ## Design Templates
 
-Design document structure ships as knowledge skills (Milestone 2):
+Design document structure ships as knowledge skills:
 
 - **Secrets engine design**: `vault-secrets-design-template` skill
 - **Issue body**: `.claude/skills/vault-secrets-plan/references/issue-body-template.md`
