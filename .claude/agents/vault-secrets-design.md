@@ -44,6 +44,14 @@ implementation.
    with a Table of Contents. Key rules:
    - §2 External API: every endpoint row cites research; client choice has
      rationale + rejected alternative; revoke/rotate idempotency stated.
+     The Integration Test Environment subsection applies the integration
+     decision rule: when the clarify answer was "agent researches
+     feasibility", read the `local-deployment` research — a viable runnable
+     image means design the live harness (L1+L2); not viable means fakes
+     only, with the rationale recorded in the subsection. If a clarified
+     requirement needs a feature the runnable tier lacks, KEEP the
+     requirement, mark its §3/§4 scenarios `live?: no`, and flag the
+     coverage conflict in §7 so the approval gate surfaces it.
    - §3 Contract: architectural decisions first, including the path-topology
      decision (flat vs. hierarchical child resources under a parent). Every
      path family gets an operations table with a "Never returns" column;

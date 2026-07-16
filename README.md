@@ -41,6 +41,7 @@ Under active development. Milestone 1 (foundations) is complete:
     ├── vault-secrets-design-template/ # design.md structure (knowledge)
     ├── vault-plugin-architecture/   # backend/Go patterns (knowledge)
     ├── vault-plugin-testing/        # test harness + fake patterns (knowledge)
+    ├── vault-plugin-integration-testing/ # opt-in live test harness patterns (knowledge)
     ├── vault-judge-criteria/        # quality scoring rubric (knowledge)
     └── vault-report-template/       # Phase 4 report format (knowledge)
 scripts/bash/                        # validate-env, create-new-feature,
@@ -84,6 +85,21 @@ hooks disabled) — add to your project's `.claude/settings.json`:
   }
 }
 ```
+
+## E2E evals
+
+`evals/e2e/` measures the workflows end-to-end: a case runs the full
+`/vault-secrets-plan → /vault-secrets-implement` cycle headlessly in a
+throwaway workdir, applies deterministic checks (design structure, checklist,
+clean-room leak check, gofmt/build/vet/test), optionally grades quality with
+an independent judge agent, and reports wall time / cost / results.
+
+```bash
+evals/e2e/run-eval.sh --case grafana --adapter mock         # $0 pipeline test
+evals/e2e/run-eval.sh --case grafana --adapter claude-code  # metered API cost
+```
+
+See `evals/e2e/README.md` for details and the cost warning.
 
 ## Clean-room constraint
 

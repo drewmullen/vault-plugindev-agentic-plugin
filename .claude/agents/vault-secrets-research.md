@@ -38,16 +38,25 @@ public open-source `vault-plugin-secrets-*` repos as authoritative sources.
    pattern ITSELF into the findings — shapes, orderings, field semantics,
    error handling — so the findings stand alone. Downstream agents never
    open these codebases; a bare "mirror repo X" pointer is unusable.
-5. **Validate**: Verify findings are consistent across sources; note
+5. **Local deployment** (when the question is deployment-shaped): find the
+   runnable container image (exact image+tag — never `:latest`), bootstrap
+   sequence, health-check endpoint, programmatic admin-token provisioning
+   against default container credentials, and the tier's feature
+   availability versus the endpoints the engine needs. **Feasibility first**
+   when the clarify answer was "agent researches feasibility": answer
+   WHETHER a viable local deployment exists (public image, runs without a
+   license, exposes the needed endpoints) before detailing how; a clear
+   "not viable" with evidence is a complete, valid finding.
+6. **Validate**: Verify findings are consistent across sources; note
    contradictions explicitly.
-6. **Synthesize**: Write structured findings per the output format below.
+7. **Synthesize**: Write structured findings per the output format below.
 
 ## Output
 
 Write research findings to `specs/{FEATURE}/research-{slug}.md` where
 `{FEATURE}` is parsed from `$ARGUMENTS` and `{slug}` is a short kebab-case
 identifier for the topic (e.g., `target-api`, `sdk-patterns`,
-`plugin-precedent`, `lifecycle-edge-cases`). Return a one-line summary to the
+`plugin-precedent`, `lifecycle-edge-cases`, `local-deployment`). Return a one-line summary to the
 orchestrator confirming the file path written.
 
 ```markdown

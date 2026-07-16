@@ -1,12 +1,13 @@
 ---
 name: vault-secrets-test-writer
-description: Vault secrets engine test writer. Scaffold the plugin repo skeleton (go.mod, entry point, backend shell, client interface) and convert design.md §3/§4 test scenario tables into table-driven Go tests against a fake client. Establishes the red baseline for the TDD workflow.
+description: Vault secrets engine test writer. Scaffold the plugin repo skeleton (go.mod, entry point, backend shell, client interface) and convert design.md §3/§4 test scenario tables into table-driven Go tests against a fake client. When the design opts into live integration testing, also scaffolds the docker-compose harness and env-gated acceptance tests. Establishes the red baseline for the TDD workflow.
 model: opus
 color: yellow
 skills:
   - vault-secrets-constitution
   - vault-plugin-architecture
   - vault-plugin-testing
+  - vault-plugin-integration-testing
 tools:
   - Skill
   - Read
@@ -42,8 +43,21 @@ and `go vet ./...` pass, `go test ./...` fails (unimplemented paths).
      concrete implementation.
    - `cmd/vault-plugin-secrets-{name}/main.go`: `plugin.ServeMultiplex` entry
      point per the architecture skill
-   - `Makefile`, `.gitignore` (bin/, *.log)
-4. **Write Test Files**:
+   - `Makefile`, `.gitignore` (bin/, *.log; plus `integration.env` when the
+     integration harness is scaffolded)
+4. **Integration Harness** (ONLY when design §2's Integration Test
+   Environment decision is live testing — skip entirely for fakes-only).
+   Follow the `vault-plugin-integration-testing` skill patterns:
+   - `docker-compose.test.yml`: the target container with the design's
+     pinned image+tag, compose-assigned host port, healthcheck
+   - `scripts/integration-bootstrap.sh`: wait-for-healthy, programmatic
+     token provisioning, gitignored `integration.env`
+   - Makefile targets `integration-up`, `integration-down`, `testacc`
+   - Env-gated acceptance tests for EVERY §3/§4 scenario row marked
+     `live?: yes` — `TestAcc*` functions guarded by `VAULT_ACC=1`, running
+     the production `Client` against the live target. They skip when the
+     gate is unset, so the red baseline is unaffected.
+5. **Write Test Files**:
    - `helpers_test.go`: `getTestBackend` (fake injected at the client seam),
      request helpers, the programmable fake client (call capture + per-method
      error injection + observable external state)
@@ -53,12 +67,13 @@ and `go vet ./...` pass, `go test ./...` fails (unimplemented paths).
    - Lifecycle tests for every row of the §4 scenario table (issue, renew,
      revoke + idempotency, rotate, rotation-failure/WAL, Enterprise
      enabled/disabled modes)
-5. **Format & Verify**: `gofmt -w .`, `go mod tidy`, then confirm the red
+6. **Format & Verify**: `gofmt -w .`, `go mod tidy`, then confirm the red
    baseline: `go build ./...` PASS, `go vet ./...` PASS,
-   `go test ./...` FAILING (not erroring at compile). Fix compile errors
-   until this exact state holds.
-6. **Report**: files created, test function count per scenario table,
-   build/vet results, test fail/skip counts.
+   `go test ./...` FAILING (not erroring at compile) — acceptance tests
+   SKIP (no `VAULT_ACC=1`). Fix compile errors until this exact state holds.
+7. **Report**: files created, test function count per scenario table
+   (including acceptance-test count when scaffolded), build/vet results,
+   test fail/skip counts.
 
 ## Key Boundaries
 

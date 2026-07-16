@@ -61,9 +61,16 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
    - **Go module path** — GitHub org/user name for
      `github.com/{org}/vault-plugin-secrets-{name}` (skip only if already
      known from `$ARGUMENTS` or the repo's `origin` remote)
+   - **Integration environment** — how should this engine be
+     integration-tested? Options: (a) public container image of the target
+     system, (b) user-provided sandbox endpoint, (c) agent researches
+     feasibility, (d) fakes only. For (a)/(b), also capture the
+     **target-system tier** — which of the §2 endpoints exist in the runnable
+     image/sandbox (e.g. some features are Enterprise-only); for (c) the
+     research slot determines the tier; for (d) skip the tier question.
    Record answers in `specs/{FEATURE}/clarifications.md`. Checkpoint
    (`"clarify"`) and post `Clarify` complete.
-7. Launch 3-4 concurrent `vault-secrets-research` agents as parallel
+7. Launch 3-5 concurrent `vault-secrets-research` agents as parallel
    foreground Task calls in a single message — one question each:
    - **target-api**: auth model, credential-management endpoints, error
      semantics, rate limits for {target system}
@@ -74,6 +81,14 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
    - **lifecycle-edge-cases**: revocation races, rotation failure recovery,
      idempotency (include when the credential model involves rotation or
      dynamic credentials)
+   - **local-deployment**: how to run {target system} locally for integration
+     tests — image+tag, bootstrap sequence, health check, programmatic token
+     provisioning, tier feature availability against the §2 endpoint needs
+     (include unless the integration-environment answer was "fakes only").
+     When the answer was "agent researches feasibility", this slot answers
+     WHETHER a viable local deployment exists first, then how — the design
+     agent applies the decision rule to its findings. Phase 1 order is
+     unchanged: feasibility lands in this existing research step.
    Each agent receives only the FEATURE path + its question via `$ARGUMENTS`
    and writes `specs/{FEATURE}/research-{slug}.md`. Verify the files exist
    via Glob — do NOT read their contents. Re-launch any missing one once.
@@ -92,7 +107,9 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
 11. Checkpoint (`"research-and-design"`). Present a design summary to the
     user via `AskUserQuestion`: path families and topology (flat vs.
     hierarchical), storage entries and seal-wrap list, credential
-    model/lifecycle, test scenario counts (§3 + §4), checklist item count.
+    model/lifecycle, test scenario counts (§3 + §4, noting how many are
+    marked live), the integration decision (live L1+L2 vs. fakes only, plus
+    any tier conflicts flagged in §7), checklist item count.
     Options: approve, review file first, request changes.
 12. If changes are requested, apply them and re-present. Repeat until
     approved. On approval: checkpoint (`"design-approved"`), post `Design`

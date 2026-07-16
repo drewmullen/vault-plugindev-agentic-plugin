@@ -52,6 +52,8 @@ WARN CHECKS:
                      (without it: issue/PR steps are skipped with a warning)
   GOLANGCI_LINT      golangci-lint installed (lint pipeline, non-blocking)
   VAULT              Vault CLI installed (dev-server smoke mount, non-blocking)
+  DOCKER             docker or podman with a compose subcommand
+                     (opt-in live integration tests, non-blocking)
 
 OPTIONS:
   --json              Output in JSON format (includes gate_passed, checks array)
@@ -175,6 +177,19 @@ if command -v vault &> /dev/null; then
     add_check "VAULT" "WARN" "true" "INSTALLED (v${VAULT_VERSION})"
 else
     add_check "VAULT" "WARN" "false" "NOT INSTALLED — dev-server smoke mount unavailable. See: https://developer.hashicorp.com/vault/install"
+fi
+
+# WARN: container runtime with compose (docker or podman) — enables the
+# opt-in live integration test stage. Never a gate: absence means the
+# integration stage is skipped with a warning.
+if command -v docker &> /dev/null && docker compose version &> /dev/null; then
+    add_check "DOCKER" "WARN" "true" "INSTALLED (docker with compose)"
+elif command -v podman &> /dev/null && podman compose version &> /dev/null; then
+    add_check "DOCKER" "WARN" "true" "INSTALLED (podman with compose)"
+elif command -v docker &> /dev/null || command -v podman &> /dev/null; then
+    add_check "DOCKER" "WARN" "false" "RUNTIME PRESENT BUT NO COMPOSE — live integration tests unavailable; install the compose plugin"
+else
+    add_check "DOCKER" "WARN" "false" "NOT INSTALLED — live integration tests unavailable (docker or podman with compose). See: https://docs.docker.com/compose/"
 fi
 
 # --- Evaluate results ---

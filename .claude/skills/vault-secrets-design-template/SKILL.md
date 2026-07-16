@@ -89,6 +89,23 @@ external system, who consumes them, what problem it solves.}
   errors (logical.ErrorResponse) vs. internal errors}
 - {Idempotency notes per endpoint — critical for revoke and rotate}
 
+### Integration Test Environment
+
+{From the Phase 1 integration-environment clarification and the
+`local-deployment` research file. When the clarify answer was "agent
+researches feasibility", the Decision below comes from that research's
+feasibility verdict. This subsection stays under §2 — do NOT add a new
+top-level section.}
+
+- **Runnable target**: {image + exact tag (never `:latest`) | user-provided
+  sandbox endpoint | none}
+- **Tier**: {which tier/edition the runnable target is, and an explicit list
+  of §2 endpoints/features UNAVAILABLE in it (empty if all available)}
+- **Bootstrap**: {one-line sequence — e.g. compose up → wait healthy →
+  POST default admin creds for API token → write integration.env}
+- **Decision**: {live L1+L2 | fakes only} — {rationale; for fakes-only, cite
+  why no viable local deployment exists or that the user opted out}
+
 ---
 
 ## 3. Backend Interface Contract
@@ -134,12 +151,16 @@ full parent prefix.}
 
 {Table-driven scenarios the test-writer converts into `path_*_test.go`. Every
 path family needs at least: happy-path CRUD(+list), validation rejection, and
-read-never-returns-secrets where applicable.}
+read-never-returns-secrets where applicable. The `live?` column marks
+scenarios that ALSO run as env-gated acceptance tests against the real target
+(only meaningful when the §2 Integration Test Environment decision is live;
+all "no" when fakes-only). Scenarios needing tier-unavailable features are
+never marked live.}
 
-| Scenario | Path | Purpose | Test function |
-|----------|------|---------|---------------|
-| {Config write/read round-trip, password omitted from read} | `config` | ... | `TestConfig_{...}` |
-| ... | | | |
+| Scenario | Path | Purpose | Test function | live? |
+|----------|------|---------|---------------|:---:|
+| {Config write/read round-trip, password omitted from read} | `config` | ... | `TestConfig_{...}` | {yes/no} |
+| ... | | | | |
 
 ---
 
@@ -192,14 +213,17 @@ the root credential too, not just roles.}
 
 {Scenarios the test-writer converts into lifecycle tests. Must cover every
 transition: issue, renew, revoke, rotate, rotation failure, and both
-enabled/disabled modes for each Enterprise-dependent feature.}
+enabled/disabled modes for each Enterprise-dependent feature. The `live?`
+column marks scenarios that ALSO run as env-gated acceptance tests against
+the real target — same rules as the §3 table: only when the §2 decision is
+live, and never for scenarios needing tier-unavailable features.}
 
-| Scenario | Transition | Purpose | Test function |
-|----------|-----------|---------|---------------|
-| {Creds issue returns declared fields with role TTL} | issue | ... | `TestCreds_{...}` |
-| {Revoke succeeds when external credential already gone} | revoke | idempotency | `TestRevoke_{...}` |
-| {Rotation failure after external call leaves recoverable WAL} | rotate | crash safety | `TestRotate_{...}` |
-| ... | | | |
+| Scenario | Transition | Purpose | Test function | live? |
+|----------|-----------|---------|---------------|:---:|
+| {Creds issue returns declared fields with role TTL} | issue | ... | `TestCreds_{...}` | {yes/no} |
+| {Revoke succeeds when external credential already gone} | revoke | idempotency | `TestRevoke_{...}` | {yes/no} |
+| {Rotation failure after external call leaves recoverable WAL} | rotate | crash safety | `TestRotate_{...}` | {no — fault injection needs the fake} |
+| ... | | | | |
 
 ---
 
@@ -225,13 +249,18 @@ contracts, not just files: who provisions the first credential, who owns
 client construction, who registers which paths. The implement orchestrator
 plans dispatch waves from these declarations — batching or parallelizing
 developer agents as the dependencies allow. The test-writer creates the repo
-skeleton and all `_test.go` files BEFORE these items run.}
+skeleton and all `_test.go` files BEFORE these items run — including the
+integration harness files (compose file, bootstrap script, acceptance tests,
+Makefile integration targets) when the §2 decision is live, so the
+integration-harness item below appears ONLY when that decision is live
+testing and covers wiring/polish of what the test-writer scaffolded.}
 
 - [ ] **A: {Client & config}** — files: {client.go, path_config.go}; depends-on: —
 - [ ] **B: {Roles / resources}** — files: {path_roles.go, ...}; depends-on: A {(client seam)}
 - [ ] **C: {Credential issuance}** — files: {path_creds.go, secret_*.go}; depends-on: A, B {(role entries; C provisions first-touch tokens — state it here if another item assumes they exist)}
 - [ ] **D: {Rotation & WAL}** — files: {path_rotate.go, wal.go}; depends-on: C {(rotates what C provisions)}
-- [ ] **E: {Polish}** — files: {README, Makefile}; depends-on: all
+- [ ] **E: {Integration harness}** — files: {docker-compose.test.yml, scripts/integration-bootstrap.sh, acceptance_test.go, Makefile}; depends-on: A {(production client is the acceptance-test subject)} — {OMIT this item entirely when the §2 decision is fakes only}
+- [ ] **F: {Polish}** — files: {README, Makefile}; depends-on: all
 
 ---
 
@@ -257,3 +286,7 @@ marked [CONSTITUTION DEVIATION] with rationale. Empty if all resolved.}
    registration) — not just file dependencies
 7. Secret material appears in responses/storage ONLY where §3 declares it;
    §5 must enumerate every occurrence
+8. Scenarios needing features the runnable target tier lacks (per §2's
+   Integration Test Environment) are NEVER marked `live?: yes` — keep the
+   requirement and its fake-backed scenario, and flag the coverage conflict
+   in §7 so the approval gate sees it

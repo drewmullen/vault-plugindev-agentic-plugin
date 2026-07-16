@@ -1,12 +1,13 @@
 ---
 name: vault-secrets-validator
-description: Validate generated secrets engine code against design.md, run the full pipeline (gofmt, go vet, go build, go test -race, golangci-lint, optional vault dev-server smoke mount), score quality against vault-judge-criteria, auto-fix unambiguous issues, and write the validation report.
+description: Validate generated secrets engine code against design.md, run the full pipeline (gofmt, go vet, go build, go test -race, golangci-lint, optional vault dev-server smoke mount, opt-in live integration stage when the design and environment allow), score quality against vault-judge-criteria, auto-fix unambiguous issues, and write the validation report.
 model: opus
 color: purple
 skills:
   - vault-secrets-constitution
   - vault-plugin-architecture
   - vault-plugin-testing
+  - vault-plugin-integration-testing
   - vault-judge-criteria
   - vault-report-template
 tools:
@@ -53,19 +54,47 @@ values), confirm the mount responds (`vault path-help` or a config read),
 then kill the server. Report PASS/FAIL/SKIPPED with output snippets. Never
 point it at a real external system.
 
-### Step 4 — Code Review
+### Step 4 — Integration (opt-in, degradable)
+
+Run ONLY when design §2's Integration Test Environment decision is live
+testing AND docker (or podman) with a compose subcommand is available. When
+either condition is unmet: record SKIPPED with a one-line WARN reason —
+never a failure, and never a reason to block the PR. Per the
+`vault-plugin-integration-testing` skill:
+
+1. `docker compose -f docker-compose.test.yml up -d`, then
+   `bash scripts/integration-bootstrap.sh` (bounded wait; on bootstrap
+   failure record FAIL for this stage and proceed to teardown).
+2. **L1**: source `integration.env`, run
+   `VAULT_ACC=1 go test -race -run TestAcc ./...` (or `make testacc`).
+3. **L2**: the dev-server e2e pass — build the plugin into a temp plugin
+   dir, `vault server -dev -dev-root-token-id root -dev-plugin-dir=...`,
+   register (sha256) + `vault secrets enable`, drive config→roles→creds→
+   revoke with `VAULT_TOKEN=root` (never `vault login`), verifying state in
+   the target container after each step. Requires the vault binary; absent
+   → L2 SKIPPED, L1 results stand.
+4. **Teardown — unconditional**, even on failure or interruption:
+   `docker compose -f docker-compose.test.yml down -v` and kill any started
+   vault dev server (trap-based when scripted).
+
+Integration results get their own report section (L1 pass/fail/skip counts,
+L2 step outcomes, teardown confirmation). An absent environment or user
+opt-out NEVER blocks the PR; live-test failures with the environment present
+are findings like any other.
+
+### Step 5 — Code Review
 
 Review against the constitution: secret hygiene in every log/error/response,
 client-seam integrity (no direct HTTP/SDK in handlers), error channels
 (user vs internal), storage versioning, WAL ordering around external
 mutations, idempotent revoke, locking, Go conventions.
 
-### Step 5 — Quality Score
+### Step 6 — Quality Score
 
 Score all 6 dimensions per the `vault-judge-criteria` skill with evidence.
 Apply the D2 < 5.0 production-readiness override.
 
-### Step 6 — Auto-Fix
+### Step 7 — Auto-Fix
 
 Conservative fixes only: `gofmt -w`, unused imports, missing doc comments,
 missing field `Description`s, and omissions where the design is unambiguous
@@ -73,7 +102,7 @@ missing field `Description`s, and omissions where the design is unambiguous
 handler logic, lifecycle behavior, or tests. Re-run `go build ./...` and
 `go test -race ./...` after fixes.
 
-### Step 7 — Report
+### Step 8 — Report
 
 Write the report to `specs/{FEATURE}/reports/validation_$(date +%Y%m%d-%H%M%S).md`
 using the `vault-report-template` skill format exactly (PASS/FAIL rules
@@ -85,6 +114,9 @@ PASS/FAIL.
 - Auto-fixes must be provably safe; everything else goes to Remaining Issues
 - Do not modify `specs/` files other than writing the report
 - The smoke mount uses fake config values only
+- Integration stage: teardown (`compose down -v` + kill vault) runs
+  unconditionally; a missing docker/podman or a fakes-only design is
+  WARN-and-skip, never FAIL, and never blocks the PR
 
 ## Output
 

@@ -75,12 +75,31 @@ expansion tricks.
 | Reviewer    | `vault-secrets-reviewer`     |
 | Validator   | `vault-secrets-validator`    |
 
+Eval-only (not part of workflow orchestration): `vault-e2e-judge` —
+independent read-only judge for e2e eval runs, used by
+`evals/e2e/judge/run-judge.sh`.
+
 **Skills** — in `.claude/skills/`:
 
 - Orchestrators: `vault-secrets-plan`, `vault-secrets-implement`
 - Knowledge packs: `vault-secrets-constitution`, `vault-domain-category`,
   `vault-secrets-design-template`, `vault-plugin-architecture`,
-  `vault-plugin-testing`, `vault-judge-criteria`, `vault-report-template`
+  `vault-plugin-testing`, `vault-plugin-integration-testing`,
+  `vault-judge-criteria`, `vault-report-template`
+- Eval harness: `vault-secrets-e2e` — non-interactive plan→implement cycle
+  driven by a case prompt file (used by `evals/e2e/`)
+
+## E2E workflow evals — `evals/e2e/`
+
+End-to-end evals for the secrets workflow live in `evals/e2e/` (see
+`evals/e2e/README.md`). Each case runs a full plan→implement cycle headlessly
+in a throwaway local git workdir (no remote — GitHub degradation mode),
+applies deterministic checks (design structure, checklist, clean-room leak
+check, gofmt/build/vet/test), optionally grades with the independent
+`vault-e2e-judge` agent (reusing `vault-judge-criteria`), and writes
+report.json/report.md with wall time, cost, and quality. `--adapter mock`
+runs the whole pipeline for $0; `--adapter claude-code` is metered `claude -p`
+cost and loads this repo via `claude --plugin-dir`.
 
 ## Packaging Rules
 

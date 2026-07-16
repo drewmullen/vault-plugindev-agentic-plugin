@@ -7,7 +7,8 @@ user-invocable: false
 # Vault Secrets Engine Test Patterns
 
 Unit and backend-harness tests only: every test runs against `logical.InmemStorage`
-and a fake client. No test talks to a real external API (dockertest deferred).
+and a fake client. No test in this layer talks to a real external API (opt-in
+live acceptance tests are a separate layer — see `vault-plugin-integration-testing`).
 testify (`require`/`assert`) is allowed and preferred for assertions.
 
 **This skill is self-contained**: write tests from these patterns — do NOT
@@ -171,6 +172,8 @@ Each feature gets both modes:
 - Every test uses a fresh `getTestBackend` — no shared mutable state;
   parallel-safe where possible
 - `go test -race ./...` is the validation-time invocation; keep tests race-clean
-- Acceptance tests against live systems are NOT written by these workflows;
-  live verification happens via the validator's optional `vault server -dev`
-  smoke mount
+- Unit and backend-harness tests never talk to a live system. Env-gated
+  acceptance tests against a disposable containerized target are a separate,
+  opt-in layer per the `vault-plugin-integration-testing` skill — written
+  only when the design's §2 Integration Test Environment decision is live
+  testing, and always skipping without `VAULT_ACC=1`
