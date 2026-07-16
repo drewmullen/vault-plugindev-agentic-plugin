@@ -1,3 +1,9 @@
+---
+name: vault-secrets-constitution
+description: Non-negotiable principles for generating Vault secrets engine plugins in Go — public SDK usage, client interface seam, secret hygiene, storage schema, credential lifecycle, WAL crash safety, Rotation Manager degradation, testing and validation gates. Load before designing, generating, or reviewing any secrets engine code.
+user-invocable: false
+---
+
 # Vault Secrets Engine Development Constitution
 
 **Version**: 0.1.0

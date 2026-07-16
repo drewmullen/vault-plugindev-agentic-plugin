@@ -30,12 +30,16 @@ Under active development. Milestone 1 (foundations) is complete:
 
 ```
 .claude-plugin/plugin.json           # Claude Code plugin manifest
-.claude/                             # skills + agents (M2/M3)
-.foundations/
-├── memory/secrets-constitution.md   # non-negotiable codegen rules
-├── templates/                       # design + issue templates
-└── scripts/bash/                    # validate-env, create-new-feature,
+.claude/
+├── CLAUDE.md                        # pointer to AGENTS.md
+├── agents/                          # subagents (M2/M3)
+└── skills/
+    ├── vault-secrets-constitution/  # non-negotiable codegen rules (knowledge)
+    └── vault-secrets-plan/          # orchestrator (M2) + references/
+scripts/bash/                        # validate-env, create-new-feature,
                                      # checkpoint-commit, post-issue-progress
+                                     # (run via ${CLAUDE_PLUGIN_ROOT}/scripts/bash/)
+docs/                                # maintainer docs — never loaded at runtime
 AGENTS.md                            # orchestration rules, component inventory
 ```
 

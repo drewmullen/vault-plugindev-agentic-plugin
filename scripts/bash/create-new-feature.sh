@@ -204,9 +204,6 @@ clean_branch_name() {
 # Resolve repository root. Prefer git information when available, but fall
 # back to searching upward from the working directory so the workflow still
 # functions in repositories that were initialised with --no-git.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TEMPLATES_DIR="$(cd "$SCRIPT_DIR/../../templates" && pwd)"
-
 if git rev-parse --show-toplevel >/dev/null 2>&1; then
     REPO_ROOT="$(git rev-parse --show-toplevel)"
     HAS_GIT=true
@@ -353,23 +350,20 @@ fi
 FEATURE_DIR="$SPECS_DIR/$BRANCH_NAME"
 mkdir -p "$FEATURE_DIR"
 
-# Templates live alongside the scripts (in this plugin's .foundations/), NOT
-# in the user's repository.
+# The design file starts empty: its structure comes from the design-template
+# knowledge skill loaded by the design agent, not from a file in this plugin.
 case "$WORKFLOW_TYPE" in
     secrets)
-        TEMPLATE="$TEMPLATES_DIR/secrets-design-template.md"
         DESIGN_FILE="$FEATURE_DIR/design.md"
         ;;
     auth)
-        TEMPLATE="$TEMPLATES_DIR/auth-design-template.md"
         DESIGN_FILE="$FEATURE_DIR/auth-design.md"
         ;;
     db)
-        TEMPLATE="$TEMPLATES_DIR/db-design-template.md"
         DESIGN_FILE="$FEATURE_DIR/db-design.md"
         ;;
 esac
-if [ -f "$TEMPLATE" ]; then cp "$TEMPLATE" "$DESIGN_FILE"; else touch "$DESIGN_FILE"; fi
+touch "$DESIGN_FILE"
 
 # Set the SPECIFY_FEATURE environment variable for the current session
 export SPECIFY_FEATURE="$BRANCH_NAME"

@@ -2,3 +2,5 @@
 *.log
 .env
 .claude/settings.local.json
+PLAN.md
+IMPLEMENTATION.md

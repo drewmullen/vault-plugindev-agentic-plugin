@@ -79,23 +79,38 @@ expansion tricks.
 (`vault-domain-category`, `vault-plugin-architecture`, `vault-plugin-testing`,
 `vault-judge-criteria`, `vault-report-template`).
 
+## Packaging Rules
+
+This repo is a pure plugin: at runtime the working directory is the **user's**
+plugin repo, so nothing may rely on repo-relative paths into this repo.
+
+- All runtime prompt content ships as **skills** — orchestrators
+  (`user-invocable: true`) and knowledge packs (`user-invocable: false`).
+  Agents load knowledge via `skills:` frontmatter, never via `Read` of a
+  repo path.
+- Fill-in artifacts ship as `references/` files inside the skill that uses
+  them, read via `${CLAUDE_PLUGIN_ROOT}/.claude/skills/<skill>/references/<file>`.
+- Bash scripts ship at plugin root `scripts/bash/` and are invoked as
+  `bash ${CLAUDE_PLUGIN_ROOT}/scripts/bash/<name>.sh`.
+- Maintainer docs live in `docs/` and are never loaded at runtime.
+
 ## Constitution
 
-Non-negotiable rules for all generated plugin code live in the constitution.
-Read it before generating code.
-
-- **Secrets engine constitution**: `.foundations/memory/secrets-constitution.md`
+Non-negotiable rules for all generated plugin code live in the
+**`vault-secrets-constitution`** knowledge skill. Load it before designing,
+generating, or reviewing secrets engine code.
 
 ## Design Templates
 
-When creating design documents, use the canonical template:
+Design document structure ships as knowledge skills (Milestone 2):
 
-- **Secrets engine design**: `.foundations/templates/secrets-design-template.md` (Milestone 2)
-- **Issue body**: `.foundations/templates/issue-body-template.md`
+- **Secrets engine design**: `vault-secrets-design-template` skill
+- **Issue body**: `.claude/skills/vault-secrets-plan/references/issue-body-template.md`
 
 ## Key Scripts
 
-All in `.foundations/scripts/bash/`:
+All in `scripts/bash/`, invoked as
+`bash ${CLAUDE_PLUGIN_ROOT}/scripts/bash/<name>.sh`:
 
 - `validate-env.sh` — GATE/WARN environment checks (Go toolchain, git repo;
   gh CLI, remote, golangci-lint, vault binary are WARN)
