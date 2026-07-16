@@ -72,6 +72,7 @@ expansion tricks.
 | Design      | `vault-secrets-design`       |
 | Test writer | `vault-secrets-test-writer`  |
 | Developer   | `vault-secrets-developer`    |
+| Reviewer    | `vault-secrets-reviewer`     |
 | Validator   | `vault-secrets-validator`    |
 
 **Skills** — in `.claude/skills/`:

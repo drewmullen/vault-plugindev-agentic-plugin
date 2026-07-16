@@ -204,16 +204,20 @@ enabled/disabled modes for each Enterprise-dependent feature.}
 
 ## 6. Implementation Checklist
 
-{4-8 coarse-grained `- [ ]` items ordered by dependency. Each item = one
-developer-agent dispatch, scoped to specific files with no overlap: if A
-creates a file, B may modify but not create it. The test-writer creates the
-repo skeleton and all `_test.go` files BEFORE these items run.}
+{4-8 coarse-grained `- [ ]` items. Each item declares `files:` (created or
+modified; if A creates a file, B may modify but not create it) and
+`depends-on:` (items that must land first). depends-on covers RUNTIME
+contracts, not just files: who provisions the first credential, who owns
+client construction, who registers which paths. The implement orchestrator
+plans dispatch waves from these declarations — batching or parallelizing
+developer agents as the dependencies allow. The test-writer creates the repo
+skeleton and all `_test.go` files BEFORE these items run.}
 
-- [ ] **A: {Client & config}** — {files: client.go, path_config.go}
-- [ ] **B: {Roles / resources}** — {files: path_roles.go, ...}
-- [ ] **C: {Credential issuance}** — {files: path_creds.go, secret_*.go}
-- [ ] **D: {Rotation & WAL}** — {files: path_rotate.go, wal.go}
-- [ ] **E: {Polish}** — {gofmt/vet clean, README, Makefile}
+- [ ] **A: {Client & config}** — files: {client.go, path_config.go}; depends-on: —
+- [ ] **B: {Roles / resources}** — files: {path_roles.go, ...}; depends-on: A {(client seam)}
+- [ ] **C: {Credential issuance}** — files: {path_creds.go, secret_*.go}; depends-on: A, B {(role entries; C provisions first-touch tokens — state it here if another item assumes they exist)}
+- [ ] **D: {Rotation & WAL}** — files: {path_rotate.go, wal.go}; depends-on: C {(rotates what C provisions)}
+- [ ] **E: {Polish}** — files: {README, Makefile}; depends-on: all
 
 ---
 
@@ -233,6 +237,9 @@ marked [CONSTITUTION DEVIATION] with rationale. Empty if all resolved.}
 5. Every test scenario maps 1:1 to a named test function; §3 covers path
    behavior, §4 covers lifecycle transitions (the constitution's coverage
    table in its §6.1 is the minimum bar)
-6. §6 items are coarse-grained with explicit file scope and no overlaps
+6. §6 items are coarse-grained with explicit `files:` scope (no creation
+   overlaps) and explicit `depends-on:` declarations that cover runtime
+   contracts (first-credential provisioning, client identity, path
+   registration) — not just file dependencies
 7. Secret material appears in responses/storage ONLY where §3 declares it;
    §5 must enumerate every occurrence

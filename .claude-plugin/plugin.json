@@ -13,6 +13,7 @@
     "./.claude/agents/vault-secrets-design.md",
     "./.claude/agents/vault-secrets-test-writer.md",
     "./.claude/agents/vault-secrets-developer.md",
+    "./.claude/agents/vault-secrets-reviewer.md",
     "./.claude/agents/vault-secrets-validator.md"
   ],
   "keywords": [

@@ -44,34 +44,49 @@ with a short hyphenated `<step_name>` (e.g., `"red-baseline"`, `"item-a-client-c
    pass; run `go test ./...` — it MUST fail or skip (unimplemented paths),
    not error at compile. If build/vet fail, send the test-writer back once
    with the errors; stop if still failing. Checkpoint (`"red-baseline"`).
-6. Extract checklist items from design §6 via Grep (`- [ ]` lines). For each
-   item in order: launch a `vault-secrets-developer` agent with the FEATURE
-   path + the item text. Items may run concurrently ONLY when their declared
-   file scopes do not overlap (backend.go path registration overlaps —
-   serialize items that both register paths unless explicitly safe). After
-   each item: verify `gofmt -l .` is empty, `go build ./...` and
-   `go vet ./...` pass, and the item is `[x]` in design §6. Checkpoint
-   (`"item-<letter>-<slug>"`).
-7. After all items: run `go test ./...` in full. For remaining failures,
+6. **Plan the dispatch** from design §6: read each item's `files:` and
+   `depends-on:` declarations and group items into waves. Items may share a
+   wave only when they have no `depends-on` edge between them, no file
+   overlap, and no shared runtime contract (client identity, first-credential
+   provisioning, backend.go path registration). YOU decide the fan-out
+   within those constraints — batch related items into ONE developer
+   instance when they share context (same path family, same lifecycle),
+   split across concurrent instances when truly independent (typically one
+   per file family). Fewer, larger dispatches cost fewer tokens (each
+   instance re-loads skills + design); concurrency buys wall time only for
+   independent work. State the wave plan in one line before dispatching.
+7. Dispatch `vault-secrets-developer` instances per the plan (FEATURE path +
+   the item text(s) in `$ARGUMENTS`). After each wave: verify `gofmt -l .`
+   is empty, `go build ./...` and `go vet ./...` pass, and the wave's items
+   are `[x]` in design §6. Checkpoint (`"wave-<n>-<slug>"`).
+8. After all items: run `go test ./...` in full. For remaining failures,
    dispatch `vault-secrets-developer` targeted at the failing behavior — or,
    if a test itself contradicts the design, the `vault-secrets-test-writer`
    to correct it (never both for the same failure). Max 3 reconciliation
    rounds; stop and report if still red. Verify all §6 items are `[x]`.
-   Checkpoint (`"implement-complete"`), post `Implement` complete.
+   Checkpoint (`"implement-complete"`).
+9. **In-loop review**: launch the `vault-secrets-reviewer` agent with the
+   FEATURE path. It reviews the whole implementation against the known
+   failure classes (bootstrap, client identity, leakage, WAL, leases,
+   locking) and fixes defects directly — the point is preventing noise at
+   the PR. Verify `specs/{FEATURE}/reports/review_*.md` exists via Glob and
+   `go test ./...` is still green (if the reviewer broke tests, send it
+   back once with the output). Checkpoint (`"review"`), post `Implement`
+   complete.
 
 ## Phase 4: Validate
 
-8. Launch the `vault-secrets-validator` agent with the FEATURE path. It runs
-   the full pipeline (gofmt, vet, build, `go test -race`, golangci-lint if
-   present, optional `vault server -dev` smoke mount), scores against
-   `vault-judge-criteria`, applies conservative auto-fixes, and writes
-   `specs/{FEATURE}/reports/validation_*.md`.
-9. Verify the report exists via Glob. If the report is FAIL or scores < 8.0
-   with P0/P1 issues: dispatch `vault-secrets-developer` at the specific
-   remaining issues, then re-launch the validator. Max 3 rounds; if still
-   failing, checkpoint and present the remaining issues to the user.
-10. Checkpoint (`"validate"`), post `Validate` complete.
-11. Create the PR (skip in degradation mode): push the branch, then
+10. Launch the `vault-secrets-validator` agent with the FEATURE path. It runs
+    the full pipeline (gofmt, vet, build, `go test -race`, golangci-lint if
+    present, optional `vault server -dev` smoke mount), scores against
+    `vault-judge-criteria`, applies conservative auto-fixes, and writes
+    `specs/{FEATURE}/reports/validation_*.md`.
+11. Verify the report exists via Glob. If the report is FAIL or scores < 8.0
+    with P0/P1 issues: dispatch `vault-secrets-developer` at the specific
+    remaining issues, then re-launch the validator. Max 3 rounds; if still
+    failing, checkpoint and present the remaining issues to the user.
+12. Checkpoint (`"validate"`), post `Validate` complete.
+13. Create the PR (skip in degradation mode): push the branch, then
     `gh pr create` with a summary of paths implemented, test counts, and the
     report verdict, linking `$ISSUE_NUMBER`. Apply exactly ONE `semver:*`
     label — `semver:minor` for a new engine, `semver:patch` for fixes to an
@@ -79,5 +94,6 @@ with a short hyphenated `<step_name>` (e.g., `"red-baseline"`, `"item-a-client-c
 
 ## Done
 
-Report: red-baseline result, checklist items completed, final test results,
-validation report path + verdict, PR link (or "local only — no remote").
+Report: red-baseline result, wave plan + checklist items completed, review
+fixes applied, final test results, validation report path + verdict, PR link
+(or "local only — no remote").

@@ -57,8 +57,13 @@ implementation.
      enabled/disabled Enterprise modes.
    - §5 Security: the secret-material map must enumerate every storage entry
      and response field carrying secrets — cross-check against §3.
-   - §6 Checklist: 4-8 coarse-grained items ordered by dependency, each
-     listing the files it creates/modifies with no overlap.
+   - §6 Checklist: 4-8 coarse-grained items, each declaring `files:` (no
+     creation overlap) and `depends-on:` — where depends-on must name
+     runtime contracts (who provisions the first credential, who owns
+     client construction, who registers which paths), not just file
+     dependencies. The implement orchestrator plans concurrency from these
+     declarations; an undeclared dependency surfaces as a bug at
+     reconciliation.
 
 5. **Validate**: Before writing, confirm:
    - ToC links all 7 sections; every §3 path has all operation rows it supports
