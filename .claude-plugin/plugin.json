@@ -14,7 +14,8 @@
     "./.claude/agents/vault-secrets-test-writer.md",
     "./.claude/agents/vault-secrets-developer.md",
     "./.claude/agents/vault-secrets-reviewer.md",
-    "./.claude/agents/vault-secrets-validator.md"
+    "./.claude/agents/vault-secrets-validator.md",
+    "./.claude/agents/vault-e2e-judge.md"
   ],
   "keywords": [
     "vault",
