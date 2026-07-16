@@ -1,0 +1,17 @@
+{
+  "name": "vault-plugindev",
+  "displayName": "Vault Plugin Development Workflows",
+  "description": "Spec-driven plan/implement workflows, skills, and subagents for developing HashiCorp Vault secrets engine plugins from an idea plus a target API.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Drew Mullen",
+    "email": "mullen.drew@gmail.com"
+  },
+  "keywords": [
+    "vault",
+    "secrets-engine",
+    "sdd",
+    "go",
+    "plugin-development"
+  ]
+}
