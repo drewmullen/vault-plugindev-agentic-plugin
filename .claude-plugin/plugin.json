@@ -10,7 +10,10 @@
   "skills": "./.claude/skills/",
   "agents": [
     "./.claude/agents/vault-secrets-research.md",
-    "./.claude/agents/vault-secrets-design.md"
+    "./.claude/agents/vault-secrets-design.md",
+    "./.claude/agents/vault-secrets-test-writer.md",
+    "./.claude/agents/vault-secrets-developer.md",
+    "./.claude/agents/vault-secrets-validator.md"
   ],
   "keywords": [
     "vault",

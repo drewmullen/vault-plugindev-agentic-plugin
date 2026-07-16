@@ -56,7 +56,7 @@ expansion tricks.
 | Command                    | Purpose                                                              | Status    |
 | -------------------------- | -------------------------------------------------------------------- | --------- |
 | `/vault-secrets-plan`      | SDD Phases 1-2: Clarify, Research, Design — stops for human approval | Available |
-| `/vault-secrets-implement` | SDD Phases 3-4: TDD implementation + validation, opens PR            | Milestone 3 |
+| `/vault-secrets-implement` | SDD Phases 3-4: TDD implementation + validation, opens PR            | Available |
 | `/vault-auth-plan`         | Same, for auth method plugins                                        | Planned   |
 | `/vault-auth-implement`    | Same, for auth method plugins                                        | Planned   |
 | `/vault-db-plan`           | Same, for database plugins (`dbplugin.Database` interface)           | Planned   |
@@ -66,22 +66,20 @@ expansion tricks.
 
 **Agents** — in `.claude/agents/` (auth/db columns planned):
 
-| Role        | Secrets                      | Status      |
-| ----------- | ---------------------------- | ----------- |
-| Research    | `vault-secrets-research`     | Available   |
-| Design      | `vault-secrets-design`       | Available   |
-| Test writer | `vault-secrets-test-writer`  | Milestone 3 |
-| Developer   | `vault-secrets-developer`    | Milestone 3 |
-| Validator   | `vault-secrets-validator`    | Milestone 3 |
+| Role        | Secrets                      |
+| ----------- | ---------------------------- |
+| Research    | `vault-secrets-research`     |
+| Design      | `vault-secrets-design`       |
+| Test writer | `vault-secrets-test-writer`  |
+| Developer   | `vault-secrets-developer`    |
+| Validator   | `vault-secrets-validator`    |
 
 **Skills** — in `.claude/skills/`:
 
-- Orchestrators: `vault-secrets-plan` (available), `vault-secrets-implement`
-  (Milestone 3)
+- Orchestrators: `vault-secrets-plan`, `vault-secrets-implement`
 - Knowledge packs: `vault-secrets-constitution`, `vault-domain-category`,
-  `vault-secrets-design-template` (available); `vault-plugin-architecture`,
+  `vault-secrets-design-template`, `vault-plugin-architecture`,
   `vault-plugin-testing`, `vault-judge-criteria`, `vault-report-template`
-  (Milestone 3)
 
 ## Packaging Rules
 

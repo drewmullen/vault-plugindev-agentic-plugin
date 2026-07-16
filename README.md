@@ -23,7 +23,7 @@ Under active development. Milestone 1 (foundations) is complete:
 
 - [x] **M1 Foundations** — plugin scaffold, `AGENTS.md`, core scripts, issue template, secrets constitution
 - [x] **M2 Plan workflow** — clarify taxonomy, design template, research/design agents, `/vault-secrets-plan`
-- [ ] **M3 Implement workflow** — architecture/testing knowledge skills, test-writer/developer/validator agents, `/vault-secrets-implement`
+- [x] **M3 Implement workflow** — architecture/testing knowledge skills, test-writer/developer/validator agents, `/vault-secrets-implement`
 - [ ] **M4+** — auth method workflows, database plugin workflows, e2e evals
 
 ## Layout
@@ -35,9 +35,14 @@ Under active development. Milestone 1 (foundations) is complete:
 ├── agents/                          # vault-secrets-research, vault-secrets-design (+M3)
 └── skills/
     ├── vault-secrets-plan/          # orchestrator + references/issue-body-template.md
+    ├── vault-secrets-implement/     # orchestrator (TDD build + validate)
     ├── vault-secrets-constitution/  # non-negotiable codegen rules (knowledge)
     ├── vault-domain-category/       # clarify-phase ambiguity taxonomy (knowledge)
-    └── vault-secrets-design-template/ # design.md structure (knowledge)
+    ├── vault-secrets-design-template/ # design.md structure (knowledge)
+    ├── vault-plugin-architecture/   # backend/Go patterns (knowledge)
+    ├── vault-plugin-testing/        # test harness + fake patterns (knowledge)
+    ├── vault-judge-criteria/        # quality scoring rubric (knowledge)
+    └── vault-report-template/       # Phase 4 report format (knowledge)
 scripts/bash/                        # validate-env, create-new-feature,
                                      # checkpoint-commit, post-issue-progress
                                      # (run via ${CLAUDE_PLUGIN_ROOT}/scripts/bash/)
