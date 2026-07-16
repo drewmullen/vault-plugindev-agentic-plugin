@@ -107,6 +107,10 @@ Rules:
 - Call capture so tests assert WHAT was sent externally, not just the response
 - Simulate idempotency semantics: deleting an absent credential returns the
   same not-found the real API returns — revoke tests depend on it
+- ID allocation: every synthetic ID counter starts at a high, per-type-distinct
+  base (e.g. service-account ids at 1000, token ids at 5000) so
+  programmatically minted ids can never collide with manually-seeded fixture
+  ids — accidental collisions can make a broken code path appear to pass
 
 ## Table-Driven Path Tests
 
@@ -139,6 +143,15 @@ Every transition from design §4's scenario table:
 - **Rotation failure / WAL**: inject failure after the external call; assert a
   WAL entry exists (`framework.ListWAL`); run the rollback/tidy path; assert
   recovery per design §4
+- **First-touch**: every engine that rotates credentials it did not create
+  gets a genuine first-touch scenario — run from clean `logical.InmemStorage`
+  and a fake client with NO pre-seeded external state, exercising the design's
+  declared bootstrap path
+
+Pre-seeding fake state is allowed only when the design says the engine manages
+pre-existing external resources — and then the bootstrap mechanism itself is
+the behavior under test. A rotation test that only passes because fixtures
+were pre-seeded is masking a bootstrap gap.
 
 ## Enterprise-Dependent Feature Modes
 

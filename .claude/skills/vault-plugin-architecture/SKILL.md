@@ -121,6 +121,14 @@ Path handlers call `b.getClient(...)` and methods on the `Client` interface —
 never HTTP/SDK calls directly. Tests replace the client with a fake at the
 same seam (struct field injection in `getTestBackend`).
 
+**Warning — `reset()` is not a rotation tool.** `reset()`/`invalidate` exist
+ONLY for cross-node config changes (replication invalidation). A rotation or
+config handler that changes the credential the client itself authenticates
+with must swap it IN-PLACE on the live client via a narrow client method
+(e.g. `Client.UpdateToken(newToken)`) — never call reset-and-rebuild from
+inside a handler: it silently replaces the injected fake client in tests and
+races with in-flight requests in production.
+
 ## Path Definitions
 
 One path family per `path_*.go` file: a builder returning the
@@ -662,6 +670,23 @@ func (b *exampleBackend) walRollback(ctx context.Context, req *logical.Request, 
     return b.reconcileRotation(ctx, req.Storage, &wal)
 }
 ```
+
+## Known SDK Gotchas
+
+Framework-level landmines that apply to every engine:
+
+1. A `framework.Path` that registers `logical.CreateOperation` but has no
+   `ExistenceCheck` panics at backend initialization — singleton paths like
+   `config` included (this is why the config example above wires
+   `pathConfigExistenceCheck`).
+2. `automatedrotationutil.ParseAutomatedRotationFields` requires
+   `rotation_schedule` and `rotation_window` to be set together; a schedule
+   without a window is a validation error — write config and tests
+   accordingly.
+3. `automatedrotationutil.AddAutomatedRotationFields` registers
+   `rotation_period` as `framework.TypeInt`. If the engine needs its own
+   duration-typed rotation period (e.g. per-role), use a different field name
+   AND a different storage key to avoid the collision.
 
 ## Entry Point (`cmd/vault-plugin-secrets-<name>/main.go`)
 

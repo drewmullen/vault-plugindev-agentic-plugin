@@ -37,6 +37,11 @@ requirements. Each category is scanned and marked: Clear / Partial / Missing.
 - Default/max TTLs; renewal allowed or not; what revocation does externally
 - Rotation: manual endpoints, automated (Rotation Manager — Enterprise),
   root credential rotation, rotation cadence
+- First-touch bootstrap: for credentials the engine will rotate but not
+  create, how does Vault learn their identity initially — import at
+  role/config write time, discover via a target-system API call, or an
+  explicit initialize endpoint? Surface as a Phase-1 clarify question
+  whenever static/rotated credentials are in scope
 - Crash recovery expectations (WAL replay after failed rotation)
 - What happens to issued credentials when a role or config is deleted
 
@@ -121,4 +126,6 @@ When scanning secrets engine specs, pay special attention to:
 - Root credential least-privilege scope in the target system
 - TTL strategy and revocation semantics
 - Rotation ownership (who rotates, when, and what happens on failure)
+- First-touch bootstrap for rotated-but-not-created credentials (import at
+  write vs. API discovery vs. initialize endpoint)
 - Enterprise-dependent features and their disabled behavior on OSS Vault

@@ -70,6 +70,10 @@ and `go vet ./...` pass, `go test ./...` fails (unimplemented paths).
 - Do not modify `specs/` files
 - **No external plugin codebases** — test patterns come exclusively from
   the loaded skills
+- **Never pre-seed fake external state as a substitute for the engine's own
+  provisioning path** — first-touch lifecycle scenarios start from clean state
+  per the `vault-plugin-testing` skill, and fake-client ID counters follow
+  that skill's high-base convention
 
 ## Output
 

@@ -165,6 +165,20 @@ what `creds/<name>` creates externally, lease attachment, renew/revoke.}
 - **Write-ordering**: {WAL before external mutation; persist only after external
   success; recovery reconciliation on startup}
 
+### First-touch Bootstrap
+
+{MANDATORY. For EVERY credential the engine rotates but did not create
+(static-role credentials, the root credential in `config`), state how Vault
+learns that credential's identity BEFORE the first rotation — chosen from:
+(a) import at role/config write time (require the id/current-secret fields in
+the write), (b) discover via a target-system API call, or (c) an explicit
+initialize/first-rotation endpoint. "The first rotate call will find it" is
+not an answer — with empty storage there is nothing to find. This applies to
+the root credential too, not just roles.}
+
+- **{credential, e.g. static-role password}**: {import at write | API discovery | initialize endpoint} — {details}
+- **{root credential}**: {...}
+
 ### Enterprise-Dependent Features
 
 {One entry per feature. REQUIRED for every Enterprise-dependent feature.}
