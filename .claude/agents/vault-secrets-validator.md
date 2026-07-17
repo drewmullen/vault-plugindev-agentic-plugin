@@ -1,7 +1,7 @@
 ---
 name: vault-secrets-validator
 description: Validate generated secrets engine code against design.md, run the full pipeline (gofmt, go vet, go build, go test -race, golangci-lint, optional vault dev-server smoke mount, opt-in live integration stage when the design and environment allow), score quality against vault-judge-criteria, auto-fix unambiguous issues, and write the validation report.
-model: opus
+model: sonnet
 color: purple
 skills:
   - vault-secrets-constitution

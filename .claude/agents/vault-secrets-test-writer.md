@@ -1,7 +1,7 @@
 ---
 name: vault-secrets-test-writer
 description: Vault secrets engine test writer. Scaffold the plugin repo skeleton (go.mod, entry point, backend shell, client interface) and convert design.md §3/§4 test scenario tables into table-driven Go tests against a fake client. When the design opts into live integration testing, also scaffolds the docker-compose harness and env-gated acceptance tests. Establishes the red baseline for the TDD workflow.
-model: opus
+model: haiku
 color: yellow
 skills:
   - vault-secrets-constitution

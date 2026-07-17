@@ -1,7 +1,7 @@
 ---
 name: vault-secrets-design
 description: Vault secrets engine design. Produce a single design.md from clarified requirements and research findings. Covers purpose & requirements, external API integration, backend interface contract, credential lifecycle, security controls, and implementation checklist.
-model: opus
+model: sonnet
 color: blue
 skills:
   - vault-secrets-constitution

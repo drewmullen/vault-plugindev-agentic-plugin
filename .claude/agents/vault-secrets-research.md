@@ -1,7 +1,7 @@
 ---
 name: vault-secrets-research
 description: Investigate target-system APIs, Vault SDK framework patterns, and public open-source secrets engine implementations. Each instance answers ONE research question. Use during planning phase to resolve external API behavior, path/storage design, and credential lifecycle unknowns.
-model: opus
+model: haiku
 color: green
 skills:
   - vault-secrets-constitution

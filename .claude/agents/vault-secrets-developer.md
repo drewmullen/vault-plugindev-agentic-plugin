@@ -1,7 +1,7 @@
 ---
 name: vault-secrets-developer
 description: Vault secrets engine developer. Execute individual implementation checklist items from design.md §6 with Go plugin code against pre-written failing tests. Item context from specs/{FEATURE}/design.md.
-model: opus
+model: sonnet
 color: orange
 skills:
   - vault-secrets-constitution

@@ -1,7 +1,7 @@
 ---
 name: vault-secrets-reviewer
 description: In-loop code reviewer for Vault secrets engine implementations. Reviews the full implementation after tests pass and before validation/PR, fixing defects directly to prevent PR noise. Focuses on the logic Vault plugins get wrong - lifecycle bootstrap, client identity through rotation, WAL ordering, secret leakage, locking.
-model: opus
+model: sonnet
 color: purple
 skills:
   - vault-secrets-constitution
