@@ -65,9 +65,16 @@ cleanup() {
 trap cleanup EXIT
 
 git -C "$WORKDIR" init -q -b main
+# Throwaway repo: pin identity locally and disable commit signing — the
+# user's global config may sign via 1Password/SSH, which hangs on an
+# interactive approval prompt in unattended runs (observed 2026-07-16).
+git -C "$WORKDIR" config user.email eval@local
+git -C "$WORKDIR" config user.name eval
+git -C "$WORKDIR" config commit.gpgsign false
+git -C "$WORKDIR" config tag.gpgsign false
 cp "$PROMPT_SRC" "$WORKDIR/eval-prompt.md"   # inside the repo so file-access hooks allow it
 git -C "$WORKDIR" add -A
-git -C "$WORKDIR" -c user.email=eval@local -c user.name=eval commit -q -m "eval seed"
+git -C "$WORKDIR" commit -q -m "eval seed"
 SEED_COMMIT=$(git -C "$WORKDIR" rev-parse HEAD)
 
 log "case=$CASE adapter=$ADAPTER run=$RUN_ID workdir=$WORKDIR"
