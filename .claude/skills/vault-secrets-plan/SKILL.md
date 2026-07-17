@@ -92,6 +92,12 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
    Each agent receives only the FEATURE path + its question via `$ARGUMENTS`
    and writes `specs/{FEATURE}/research-{slug}.md`. Verify the files exist
    via Glob — do NOT read their contents. Re-launch any missing one once.
+   **Leak gate** (mechanical — do not rely on agent compliance): run
+   `grep -n -iE 'vault-plugin-(secrets|auth|database)-[a-z-]+|openldap' specs/{FEATURE}/research-*.md`
+   and discard hits that fall under a `### Sources` heading. Any remaining
+   hit: Edit that line to describe the pattern generically (no repo names)
+   before Phase 2 — the design agent must never see precedent names outside
+   Sources, and the eval leak check fails the run on them.
 
 ## Phase 2: Design
 
@@ -104,6 +110,13 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
 10. Grep to confirm all 7 sections are present (`## 1. Purpose` through
     `## 7. Open Questions`) and that §4 contains an
     `Enterprise-Dependent Features` table. Fix inline if anything is missing.
+    **Compliance gate** (mechanical): every §6 `- [ ]` item line must contain
+    both `files:` and `depends-on:` (`grep -c` each against the item count),
+    and the design must not name precedent plugin repos anywhere
+    (same grep as the Phase 1 leak gate, no Sources exemption here). On
+    failure: derive `files:`/`depends-on:` from the item text and ordering
+    and Edit them in, or re-dispatch the design agent once with the specific
+    gap named; rewrite any precedent-name line to cite its research file.
 11. Checkpoint (`"research-and-design"`). Present a design summary to the
     user via `AskUserQuestion`: path families and topology (flat vs.
     hierarchical), storage entries and seal-wrap list, credential
