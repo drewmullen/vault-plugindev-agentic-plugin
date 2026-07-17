@@ -6,6 +6,10 @@ color: purple
 skills:
   - vault-secrets-constitution
   - vault-plugin-architecture
+  - vault-plugin-config-client
+  - vault-plugin-dynamic-roles
+  - vault-plugin-dynamic-creds
+  - vault-plugin-static-roles
   - vault-plugin-testing
 tools:
   - Skill
