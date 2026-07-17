@@ -62,6 +62,9 @@ start_ts=$(date +%s)
 set +e
 (
   cd "$WORKDIR" || exit 97
+  # Arms the plugin's eval-mode Stop gate (gate-eval-stop.sh): the session
+  # cannot stop while the workflow is artifact-incomplete.
+  export VAULT_E2E_EVAL=1
   run_with_timeout "$TIMEOUT_SECS" claude "${args[@]}"
 ) > "$OUT/agent-envelope.json" 2> "$OUT/agent-stderr.log"
 exit_code=$?

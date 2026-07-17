@@ -128,6 +128,7 @@ MIN_SCORE="${JUDGE_MIN_SCORE:-7.0}"
 
 ensure_json() { [[ -s "$1" ]] && jq -e . "$1" >/dev/null 2>&1 || printf '%s\n' "$2" > "$1"; }
 ensure_json "$OUT/agent-result.json" '{"adapter":null,"model":null,"cost_usd":null,"num_turns":null,"session_id":null,"exit_code":null,"status":"error"}'
+ensure_json "$OUT/agent-envelope.json" 'null'
 ensure_json "$OUT/judge-verdict.json" 'null'
 ensure_json "$OUT/judge-result.json" '{"judge_error":"judge produced no result","skipped":false,"cost_usd":null}'
 
@@ -138,6 +139,7 @@ jq -n \
   --argjson wall "$WALL" \
   --argjson min "$MIN_SCORE" \
   --slurpfile agent "$OUT/agent-result.json" \
+  --slurpfile envelope "$OUT/agent-envelope.json" \
   --slurpfile checks "$OUT/checks.json" \
   --slurpfile verdict "$OUT/judge-verdict.json" \
   --slurpfile jresult "$OUT/judge-result.json" \
@@ -153,7 +155,8 @@ jq -n \
     agent: {
       adapter: $agent[0].adapter, model: $agent[0].model,
       cost_usd: $agent[0].cost_usd, num_turns: $agent[0].num_turns,
-      session_id: $agent[0].session_id, exit_code: $agent[0].exit_code
+      session_id: $agent[0].session_id, exit_code: $agent[0].exit_code,
+      model_usage: (try $envelope[0].modelUsage catch null)
     },
     deterministic: {pass: $checks[0].pass, checks: $checks[0].checks},
     judge: (if $j == null then null else {
@@ -189,6 +192,16 @@ GRADE=$(jq -r '.grade' "$OUT/report.json")
   echo "| Turns | $(jq -r '.agent.num_turns // "n/a"' "$OUT/report.json") |"
   echo "| Model | $(jq -r '.agent.model // "n/a"' "$OUT/report.json") |"
   echo
+  if jq -e '.agent.model_usage | objects | length > 0' "$OUT/report.json" >/dev/null 2>&1; then
+    echo "## Tokens by model"
+    echo
+    echo "| Model | Output | Fresh input | Cache reads | Cache writes | Cost (USD) |"
+    echo "|---|---|---|---|---|---|"
+    jq -r '.agent.model_usage | to_entries[] |
+      "| \(.key) | \(.value.outputTokens // 0) | \(.value.inputTokens // 0) | \(.value.cacheReadInputTokens // 0) | \(.value.cacheCreationInputTokens // 0) | \(.value.costUSD // 0 | (.*100 | round) / 100) |"' \
+      "$OUT/report.json"
+    echo
+  fi
   echo "## Deterministic checks — $([[ "$CHECKS_PASS" == "true" ]] && echo PASS || echo FAIL)"
   echo
   echo "| Check | Result | Detail |"
