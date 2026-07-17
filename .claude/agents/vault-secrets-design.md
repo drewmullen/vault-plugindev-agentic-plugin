@@ -83,8 +83,10 @@ implementation.
      checklist items) directs implementation to external repos, URLs, or
      other plugin codebases. Target-API facts cite research files; Vault-side
      patterns are expressed by skill section (e.g. "per
-     `vault-plugin-architecture` § Rotation & WAL"). Precedent plugins may be
-     named in rationale as provenance only — never as something to consult.
+     `vault-plugin-architecture` § Rotation & WAL"). Never name precedent
+     plugin repos anywhere in design.md — not even as rationale provenance;
+     cite the research file instead (e.g. "per research-plugin-precedent").
+     The eval leak gate fails any design that mentions them.
 
 6. **Write**: Output to `specs/{FEATURE}/design.md`. Create the directory if
    needed.

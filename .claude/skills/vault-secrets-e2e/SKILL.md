@@ -28,6 +28,14 @@ Read that file FIRST — everything below executes against its content.
   artifacts local. Do not try to add a remote.
 - **Resolve problems yourself.** If a step fails, fix it and continue; never
   stop to ask.
+- **There is no user.** This skill runs headlessly (`claude -p`): any turn
+  that ends with a question, an offer of options, or "what would you like to
+  do?" silently TERMINATES the session and fails the eval. Every response
+  must end with work completed or the final status line — nothing else.
+- **All subagent dispatches are FOREGROUND.** Never launch background
+  agents or background shell tasks: the session can end while they run,
+  and pausing one to check in kills the run (observed failure mode:
+  "I've paused the docs agent. What would you like to do?" — $21 lost).
 
 ## PART 1: PLANNING
 

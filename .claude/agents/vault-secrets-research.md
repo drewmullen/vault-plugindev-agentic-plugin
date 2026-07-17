@@ -92,7 +92,10 @@ orchestrator confirming the file path written.
 - MUST run in foreground
 - Clean-room: public sources only — never cite private repos or internal docs
 - Findings must be self-contained: describe patterns concretely in the
-  findings body; repo names/URLs belong in Sources as provenance only
+  findings body using generic terms ("a hybrid dynamic+static engine", "the
+  studied plugins") — specific repo names/URLs appear ONLY under the
+  `### Sources` heading, nowhere else. The eval leak gate greps for
+  precedent-repo names outside Sources and fails the run on any hit
 
 ## Context
 
