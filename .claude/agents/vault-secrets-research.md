@@ -33,7 +33,8 @@ public open-source `vault-plugin-secrets-*` repos as authoritative sources.
    definitions, storage, leases (`framework.Secret`), WAL, rotation, and
    testing conventions from public docs/godoc.
 4. **Existing plugins**: Study public open-source secrets engines
-   (e.g. `vault-plugin-secrets-openldap`, `vault-plugin-secrets-terraform`)
+   (e.g. `vault-plugin-secrets-openldap`, `vault-plugin-secrets-terraform`,
+   `vault-plugin-secrets-gcp`, `hashi-demo-lab/vault-plugin-secrets-aap`)
    for layout precedent, client seams, and lifecycle handling. Extract the
    pattern ITSELF into the findings — shapes, orderings, field semantics,
    error handling — so the findings stand alone. Downstream agents never

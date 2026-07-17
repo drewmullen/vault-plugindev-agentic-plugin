@@ -8,11 +8,12 @@ component inventory lives in its "Component Inventory" section.
 
 ## Clean-room constraint
 
-This plugin is built exclusively from public HashiCorp sources:
+This plugin is built exclusively from public sources:
 developer.hashicorp.com/vault docs, the public `hashicorp/vault/sdk` godoc,
-and public open-source plugin repos (`vault-plugin-secrets-openldap`,
-`vault-plugin-secrets-terraform`). Do not copy content from private skill
-collections or internal plugin repositories.
+and public open-source plugin repos (`hashicorp/vault-plugin-secrets-openldap`,
+`hashicorp/vault-plugin-secrets-terraform`, `hashicorp/vault-plugin-secrets-gcp`,
+`hashi-demo-lab/vault-plugin-secrets-aap`). Do not copy content from private
+skill collections or internal plugin repositories.
 
 ## Plugin packaging
 

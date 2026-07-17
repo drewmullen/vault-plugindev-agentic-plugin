@@ -103,7 +103,8 @@ See `evals/e2e/README.md` for details and the cost warning.
 
 ## Clean-room constraint
 
-Built exclusively from public HashiCorp sources: developer.hashicorp.com/vault,
+Built exclusively from public sources: developer.hashicorp.com/vault,
 the public `hashicorp/vault/sdk` godoc, and public open-source plugin repos
-(`vault-plugin-secrets-openldap`, `vault-plugin-secrets-terraform`). No content
-from private skill collections or internal plugin repositories.
+(`hashicorp/vault-plugin-secrets-openldap`, `hashicorp/vault-plugin-secrets-terraform`,
+`hashicorp/vault-plugin-secrets-gcp`, `hashi-demo-lab/vault-plugin-secrets-aap`).
+No content from private skill collections or internal plugin repositories.

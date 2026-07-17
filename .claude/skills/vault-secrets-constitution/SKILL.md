@@ -10,7 +10,7 @@ user-invocable: false
 **Effective Date**: July 2026
 **Purpose**: Non-negotiable principles for generating Vault secrets engine plugins in Go
 **Authority**: This document governs what correct plugin code looks like. Workflow mechanics live in orchestrator skills. Agent behavior lives in AGENTS.md. If a rule exists here, it is not duplicated elsewhere.
-**Sources**: Built exclusively from public HashiCorp documentation (developer.hashicorp.com/vault, `hashicorp/vault/sdk` godoc) and public open-source plugin repos (`vault-plugin-secrets-openldap`, `vault-plugin-secrets-terraform`).
+**Sources**: Built exclusively from public HashiCorp documentation (developer.hashicorp.com/vault, `hashicorp/vault/sdk` godoc) and public open-source plugin repos (`hashicorp/vault-plugin-secrets-openldap`, `hashicorp/vault-plugin-secrets-terraform`, `hashicorp/vault-plugin-secrets-gcp`, `hashi-demo-lab/vault-plugin-secrets-aap`).
 
 ---
 

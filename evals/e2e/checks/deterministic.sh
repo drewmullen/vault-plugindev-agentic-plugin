@@ -47,7 +47,7 @@ if [[ -z "$major" || -z "$minor" ]] || ! { [[ "$major" -gt 1 ]] || { [[ "$major"
   die "effective Go toolchain is '${GOVER:-unknown}' — >= 1.24 required (install a newer go or enable GOTOOLCHAIN=auto)"
 fi
 
-LEAK_PATTERN='openldap|secrets-terraform'
+LEAK_PATTERN='openldap|secrets-terraform|vault-plugin-secrets-gcp|vault-plugin-secrets-aap|hashi-demo-lab'
 
 RESULTS='{}'
 FAILED=0
