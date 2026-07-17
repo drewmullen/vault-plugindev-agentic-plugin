@@ -243,24 +243,32 @@ live, and never for scenarios needing tier-unavailable features.}
 ## 6. Implementation Checklist
 
 {4-8 coarse-grained `- [ ]` items. Each item declares `files:` (created or
-modified; if A creates a file, B may modify but not create it) and
-`depends-on:` (items that must land first). depends-on covers RUNTIME
-contracts, not just files: who provisions the first credential, who owns
-client construction, who registers which paths. The implement orchestrator
-plans dispatch waves from these declarations — batching or parallelizing
-developer agents as the dependencies allow. The test-writer creates the repo
-skeleton and all `_test.go` files BEFORE these items run — including the
-integration harness files (compose file, bootstrap script, acceptance tests,
-Makefile integration targets) when the §2 decision is live, so the
-integration-harness item below appears ONLY when that decision is live
-testing and covers wiring/polish of what the test-writer scaffolded.}
+modified; if A creates a file, B may modify but not create it),
+`depends-on:` (items that must land first), and `skills:` (the activity
+skill(s) the developer loads before implementing the item — `—` when none
+applies). depends-on covers RUNTIME contracts, not just files: who
+provisions the first credential, who owns client construction, who registers
+which paths. The implement orchestrator plans dispatch waves from these
+declarations — batching or parallelizing developer agents as the
+dependencies allow. `skills:` values come from this CLOSED list — never
+invent names: `vault-plugin-config-client` (config, client seam, root
+rotation), `vault-plugin-dynamic-roles` (dynamic role CRUD),
+`vault-plugin-dynamic-creds` (creds path, framework.Secret, mint WAL),
+`vault-plugin-static-roles` (static roles, rotation queue, static creds),
+`vault-plugin-integration-testing` (integration harness). The test-writer
+creates the repo skeleton and all `_test.go` files BEFORE these items run —
+including the integration harness files (compose file, bootstrap script,
+acceptance tests, Makefile integration targets) when the §2 decision is
+live, so the integration-harness item below appears ONLY when that decision
+is live testing and covers wiring/polish of what the test-writer
+scaffolded.}
 
-- [ ] **A: {Client & config}** — files: {client.go, path_config.go}; depends-on: —
-- [ ] **B: {Roles / resources}** — files: {path_roles.go, ...}; depends-on: A {(client seam)}
-- [ ] **C: {Credential issuance}** — files: {path_creds.go, secret_*.go}; depends-on: A, B {(role entries; C provisions first-touch tokens — state it here if another item assumes they exist)}
-- [ ] **D: {Rotation & WAL}** — files: {path_rotate.go, wal.go}; depends-on: C {(rotates what C provisions)}
-- [ ] **E: {Integration harness}** — files: {docker-compose.test.yml, scripts/integration-bootstrap.sh, acceptance_test.go, Makefile}; depends-on: A {(production client is the acceptance-test subject)} — {OMIT this item entirely when the §2 decision is fakes only}
-- [ ] **F: {Polish}** — files: {README, Makefile}; depends-on: all
+- [ ] **A: {Client & config}** — files: {client.go, path_config.go}; depends-on: —; skills: vault-plugin-config-client
+- [ ] **B: {Roles / resources}** — files: {path_roles.go, ...}; depends-on: A {(client seam)}; skills: vault-plugin-dynamic-roles {(or vault-plugin-static-roles for static-account engines)}
+- [ ] **C: {Credential issuance}** — files: {path_creds.go, secret_*.go}; depends-on: A, B {(role entries; C provisions first-touch tokens — state it here if another item assumes they exist)}; skills: vault-plugin-dynamic-creds
+- [ ] **D: {Rotation & WAL}** — files: {path_rotate.go, wal.go}; depends-on: C {(rotates what C provisions)}; skills: vault-plugin-config-client {(root rotation; use vault-plugin-static-roles for static rotation queues)}
+- [ ] **E: {Integration harness}** — files: {docker-compose.test.yml, scripts/integration-bootstrap.sh, acceptance_test.go, Makefile}; depends-on: A {(production client is the acceptance-test subject)}; skills: vault-plugin-integration-testing — {OMIT this item entirely when the §2 decision is fakes only}
+- [ ] **F: {Polish}** — files: {README, Makefile}; depends-on: all; skills: —
 
 ---
 
@@ -281,9 +289,11 @@ marked [CONSTITUTION DEVIATION] with rationale. Empty if all resolved.}
    behavior, §4 covers lifecycle transitions (the constitution's coverage
    table in its §6.1 is the minimum bar)
 6. §6 items are coarse-grained with explicit `files:` scope (no creation
-   overlaps) and explicit `depends-on:` declarations that cover runtime
+   overlaps), explicit `depends-on:` declarations that cover runtime
    contracts (first-credential provisioning, client identity, path
-   registration) — not just file dependencies
+   registration) — not just file dependencies — and explicit `skills:`
+   declarations drawn only from the closed list in the §6 guidance
+   (`—` for items no activity skill covers)
 7. Secret material appears in responses/storage ONLY where §3 declares it;
    §5 must enumerate every occurrence
 8. Scenarios needing features the runnable target tier lacks (per §2's

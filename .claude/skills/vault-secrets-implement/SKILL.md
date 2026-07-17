@@ -44,21 +44,30 @@ with a short hyphenated `<step_name>` (e.g., `"red-baseline"`, `"item-a-client-c
    pass; run `go test ./...` — it MUST fail or skip (unimplemented paths),
    not error at compile. If build/vet fail, send the test-writer back once
    with the errors; stop if still failing. Checkpoint (`"red-baseline"`).
-6. **Plan the dispatch** from design §6: read each item's `files:` and
-   `depends-on:` declarations and group items into waves. Items may share a
-   wave only when they have no `depends-on` edge between them, no file
-   overlap, and no shared runtime contract (client identity, first-credential
-   provisioning, backend.go path registration). YOU decide the fan-out
-   within those constraints — batch related items into ONE developer
-   instance when they share context (same path family, same lifecycle),
-   split across concurrent instances when truly independent (typically one
-   per file family). Fewer, larger dispatches cost fewer tokens (each
-   instance re-loads skills + design); concurrency buys wall time only for
-   independent work. State the wave plan in one line before dispatching.
-7. Dispatch `vault-secrets-developer` instances per the plan (FEATURE path +
-   the item text(s) in `$ARGUMENTS`). After each wave: verify `gofmt -l .`
-   is empty, `go build ./...` and `go vet ./...` pass, and the wave's items
-   are `[x]` in design §6. Checkpoint (`"wave-<n>-<slug>"`).
+6. **Plan the dispatch** from design §6: read each item's `files:`,
+   `depends-on:`, and `skills:` declarations and group items into waves.
+   Items may share a wave only when they have no `depends-on` edge between
+   them, no file overlap, and no shared runtime contract (client identity,
+   first-credential provisioning, backend.go path registration). YOU decide
+   the fan-out within those constraints — batch related items into ONE
+   developer instance when they share context (same path family, same
+   lifecycle), split across concurrent instances when truly independent
+   (typically one per file family). Fewer, larger dispatches cost fewer
+   tokens (each instance re-loads skills + design); concurrency buys wall
+   time only for independent work. If an item's `skills:` is missing or
+   names an unknown skill, infer from its `files:` (path_config/client →
+   `vault-plugin-config-client`, path_roles → `vault-plugin-dynamic-roles`,
+   creds/secret_ → `vault-plugin-dynamic-creds`, static →
+   `vault-plugin-static-roles`, harness →
+   `vault-plugin-integration-testing`); if inference fails, name all four
+   activity skills and note the warning in the wave-plan line. State the
+   wave plan in one line before dispatching.
+7. Dispatch `vault-secrets-developer` instances per the plan. `$ARGUMENTS` =
+   FEATURE path + the item text(s) + `Activity skills to load first via the
+   Skill tool: <union of the batched items' skills:, omitting —>`. After
+   each wave: verify `gofmt -l .` is empty, `go build ./...` and
+   `go vet ./...` pass, and the wave's items are `[x]` in design §6.
+   Checkpoint (`"wave-<n>-<slug>"`).
 8. After all items: run `go test ./...` in full. For remaining failures,
    dispatch `vault-secrets-developer` targeted at the failing behavior — or,
    if a test itself contradicts the design, the `vault-secrets-test-writer`

@@ -86,6 +86,10 @@ independent read-only judge for e2e eval runs, used by
   `vault-secrets-design-template`, `vault-plugin-architecture`,
   `vault-plugin-testing`, `vault-plugin-integration-testing`,
   `vault-judge-criteria`, `vault-report-template`
+- Activity packs (per design §6 checklist item; loaded by the developer at
+  runtime, by reviewer/validator via frontmatter):
+  `vault-plugin-config-client`, `vault-plugin-dynamic-roles`,
+  `vault-plugin-dynamic-creds`, `vault-plugin-static-roles`
 - Eval harness: `vault-secrets-e2e` — non-interactive plan→implement cycle
   driven by a case prompt file (used by `evals/e2e/`)
 
@@ -108,8 +112,10 @@ plugin repo, so nothing may rely on repo-relative paths into this repo.
 
 - All runtime prompt content ships as **skills** — orchestrators
   (`user-invocable: true`) and knowledge packs (`user-invocable: false`).
-  Agents load knowledge via `skills:` frontmatter, never via `Read` of a
-  repo path.
+  Agents load baseline knowledge via `skills:` frontmatter; the developer
+  additionally loads the activity pack(s) its design §6 item names — passed
+  in `$ARGUMENTS` by the implement orchestrator — at runtime via the Skill
+  tool. `Read` of a repo path is never a loading mechanism.
 - Fill-in artifacts ship as `references/` files inside the skill that uses
   them, read via `${CLAUDE_PLUGIN_ROOT}/.claude/skills/<skill>/references/<file>`.
 - Bash scripts ship at plugin root `scripts/bash/` and are invoked as
@@ -160,4 +166,5 @@ These rules apply to ALL workflows. Replace `{workflow}` with `secrets`
    `specs/{FEATURE}/research-{slug}.md`. Verify files exist via Glob before
    launching the design agent.
 5. **Minimal $ARGUMENTS**: only pass the FEATURE path + a specific question or
-   scope. No exceptions.
+   scope — plus, for developer dispatches, the item's activity-skill names.
+   No exceptions.

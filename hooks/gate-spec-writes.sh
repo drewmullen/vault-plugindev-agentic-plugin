@@ -7,11 +7,12 @@
 #   specs/*/research-*.md  — precedent-repo names allowed ONLY on/after the
 #                            file's '### Sources' line
 #   specs/*/design.md      — precedent-repo names never allowed; every §6
-#                            checklist item must declare files: and depends-on:
+#                            checklist item must declare files:, depends-on:,
+#                            and skills: (closed activity-skill list or —)
 #
-# Mirrors evals/e2e/checks/deterministic.sh (leak_check, checklist_depends_on)
-# — passing this hook implies passing those checks. The vault-secrets-plan
-# orchestrator gates remain as backstop.
+# Mirrors evals/e2e/checks/deterministic.sh (leak_check, checklist_depends_on,
+# checklist_skills) — passing this hook implies passing those checks. The
+# vault-secrets-plan orchestrator gates remain as backstop.
 #
 # $1 = harness dialect: claude/cursor signal on exit 2, copilot on exit 1
 set -uo pipefail
@@ -57,8 +58,13 @@ case "$target" in
       if [ "${items:-0}" -gt 0 ]; then
         with_files=$(printf '%s\n' "$sec6" | grep -c '^- \[[ x]\].*files:' || true)
         with_deps=$(printf '%s\n' "$sec6" | grep -c '^- \[[ x]\].*depends-on:' || true)
+        with_skills=$(printf '%s\n' "$sec6" | grep -c '^- \[[ x]\].*skills:' || true)
         [ "$with_files" -eq "$items" ] || deny "§6: only $with_files of $items checklist items declare 'files:'. Every item needs an explicit files: scope. Fix now."
         [ "$with_deps" -eq "$items" ] || deny "§6: only $with_deps of $items checklist items declare 'depends-on:'. Every item needs depends-on: (naming runtime contracts, '—' if none). Fix now — the eval checklist_depends_on check fails the run without it."
+        [ "$with_skills" -eq "$items" ] || deny "§6: only $with_skills of $items checklist items declare 'skills:'. Every item needs skills: (activity skill name(s) from the design template's closed list, '—' if none). Fix now — the eval checklist_skills check fails the run without it."
+        VALID_SKILLS='vault-plugin-config-client|vault-plugin-dynamic-roles|vault-plugin-dynamic-creds|vault-plugin-static-roles|vault-plugin-integration-testing'
+        bad_skills=$(printf '%s\n' "$sec6" | grep '^- \[[ x]\].*skills:' | sed -E 's/.*skills:[[:space:]]*//' | grep -oE 'vault-plugin-[a-z-]+' | grep -vE "^($VALID_SKILLS)$" || true)
+        [ -z "$bad_skills" ] || deny "§6: unknown skills: value(s): $(printf '%s' "$bad_skills" | tr '\n' ' '). Use only the design template's closed list: ${VALID_SKILLS//|/, } (or '—'). Fix now."
       fi
     fi
     ;;

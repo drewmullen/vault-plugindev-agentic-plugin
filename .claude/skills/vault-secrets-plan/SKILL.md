@@ -111,12 +111,19 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
     `## 7. Open Questions`) and that §4 contains an
     `Enterprise-Dependent Features` table. Fix inline if anything is missing.
     **Compliance gate** (mechanical): every §6 `- [ ]` item line must contain
-    both `files:` and `depends-on:` (`grep -c` each against the item count),
-    and the design must not name precedent plugin repos anywhere
-    (same grep as the Phase 1 leak gate, no Sources exemption here). On
-    failure: derive `files:`/`depends-on:` from the item text and ordering
-    and Edit them in, or re-dispatch the design agent once with the specific
-    gap named; rewrite any precedent-name line to cite its research file.
+    `files:`, `depends-on:`, and `skills:` (`grep -c` each against the item
+    count); every `skills:` value must be `—` or a name from the template's
+    closed list (`vault-plugin-config-client`, `vault-plugin-dynamic-roles`,
+    `vault-plugin-dynamic-creds`, `vault-plugin-static-roles`,
+    `vault-plugin-integration-testing`); and the design must not name
+    precedent plugin repos anywhere (same grep as the Phase 1 leak gate, no
+    Sources exemption here). On failure: derive `files:`/`depends-on:` from
+    the item text and ordering, and `skills:` from the item's `files:`
+    (path_config/client → config-client, path_roles → dynamic-roles,
+    creds/secret_ → dynamic-creds, static → static-roles, harness →
+    integration-testing), and Edit them in, or re-dispatch the design agent
+    once with the specific gap named; rewrite any precedent-name line to
+    cite its research file.
 11. Checkpoint (`"research-and-design"`). Present a design summary to the
     user via `AskUserQuestion`: path families and topology (flat vs.
     hierarchical), storage entries and seal-wrap list, credential

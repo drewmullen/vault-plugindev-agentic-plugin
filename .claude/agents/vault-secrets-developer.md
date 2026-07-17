@@ -28,8 +28,13 @@ producing Go code that turns the item's pre-written failing tests green.
 
 1. **Load Context**: The `vault-secrets-constitution` and
    `vault-plugin-architecture` skills define the non-negotiable rules and
-   code patterns; `vault-plugin-testing` explains the harness your code is
-   tested through.
+   core scaffold patterns; `vault-plugin-testing` explains the harness your
+   code is tested through. Then load each activity skill named in
+   `$ARGUMENTS` ("Activity skills to load first via the Skill tool: ...")
+   via the Skill tool — these carry the item's concrete code patterns. If a
+   named skill does not exist, report the typo in your output and consult
+   the activity skill map in `vault-plugin-architecture` instead — do not
+   guess at names.
 2. **Read Design**: Parse the checklist item from `$ARGUMENTS`. Load
    `specs/{FEATURE}/design.md` for full context — §2 (external API), §3
    (paths/fields/storage), §4 (lifecycle), §5 (security controls).
@@ -38,9 +43,10 @@ producing Go code that turns the item's pre-written failing tests green.
    expected behavior.
 4. **Research**: Verify the TARGET SYSTEM's API signatures via web
    search/fetch when the design or research files leave a gap. Vault SDK
-   patterns come from the `vault-plugin-architecture` and
-   `vault-plugin-testing` skills — never fetch or read other plugin
-   codebases (`github.com/hashicorp/vault-plugin-*`, local checkouts).
+   patterns come from the loaded skills (`vault-plugin-architecture`, the
+   item's activity skills, `vault-plugin-testing`) — never fetch or read
+   other plugin codebases (`github.com/hashicorp/vault-plugin-*`, local
+   checkouts).
 5. **Implement**: Write Go code for the item's file scope only. Register the
    item's paths in `backend.go`'s `Paths` list. Handlers call the `Client`
    interface — never HTTP/SDK directly. User errors →

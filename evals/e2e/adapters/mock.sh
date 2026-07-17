@@ -101,10 +101,10 @@ with WAL-before-external-mutation ordering.
 
 ## 6. Implementation Checklist
 
-- [x] **A: Client & config** — files: client.go, path_config.go; depends-on: —
-- [x] **B: Roles** — files: path_roles.go; depends-on: A (client seam)
-- [x] **C: Credential issuance** — files: path_creds.go, secret_token.go; depends-on: A, B
-- [x] **D: Rotation & WAL** — files: path_rotate.go, wal.go; depends-on: C
+- [x] **A: Client & config** — files: client.go, path_config.go; depends-on: —; skills: vault-plugin-config-client
+- [x] **B: Roles** — files: path_roles.go; depends-on: A (client seam); skills: vault-plugin-dynamic-roles
+- [x] **C: Credential issuance** — files: path_creds.go, secret_token.go; depends-on: A, B; skills: vault-plugin-dynamic-creds
+- [x] **D: Rotation & WAL** — files: path_rotate.go, wal.go; depends-on: C; skills: vault-plugin-config-client
 
 ## 7. Open Questions
 

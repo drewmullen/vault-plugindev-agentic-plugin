@@ -88,4 +88,4 @@ for p in "$proj" "$gomodcache" "$usertmp" /tmp /private/tmp /var/folders /privat
   esac
 done
 
-deny "file access outside the working repository ($target). Vault-side implementation patterns come from the vault-plugin-architecture and vault-plugin-testing skills — do not consult external codebases; web research is for the target system's API only."
+deny "file access outside the working repository ($target). Vault-side implementation patterns come from the vault-plugin-* knowledge skills (architecture, activity packs, testing) — do not consult external codebases; web research is for the target system's API only."

@@ -9,6 +9,7 @@
 #   design_doc          exactly one specs/*/design.md with all 7 section headers
 #   checklist_complete  every §6 checklist item is checked [x]
 #   checklist_depends_on every §6 item declares depends-on:
+#   checklist_skills    every §6 item declares skills: from the closed activity-skill list
 #   leak_check          no clean-room precedent-repo names outside research Sources
 #   review_report       specs/*/reports/review_*.md exists
 #   validation_report   specs/*/reports/validation_*.md exists
@@ -122,6 +123,37 @@ else
     record checklist_depends_on fail "$without of $total items missing depends-on:"
   else
     record checklist_depends_on pass ""
+  fi
+fi
+
+# ---- (c2) every §6 item declares skills: from the closed list ----
+VALID_SKILLS='vault-plugin-config-client|vault-plugin-dynamic-roles|vault-plugin-dynamic-creds|vault-plugin-static-roles|vault-plugin-integration-testing'
+if [[ -z "$DESIGN" ]]; then
+  record checklist_skills fail "no design doc"
+else
+  items=$(checklist_items "$DESIGN")
+  total=$(grep -c . <<<"$items" 2>/dev/null || true)
+  without=$(grep -cv 'skills:' <<<"$items" 2>/dev/null || true)
+  if [[ "${total:-0}" -eq 0 ]]; then
+    record checklist_skills fail "no checklist items found in §6"
+  elif [[ "${without:-0}" -gt 0 ]]; then
+    record checklist_skills fail "$without of $total items missing skills:"
+  else
+    bad=""
+    while IFS= read -r line; do
+      decl=${line#*skills:}
+      toks=$(grep -oE 'vault-plugin-[a-z-]+' <<<"$decl" || true)
+      if [[ -z "$toks" ]]; then
+        # no skill named — the declaration must be the explicit none marker
+        grep -q '—' <<<"$decl" || bad="$bad <empty>"
+        continue
+      fi
+      while IFS= read -r t; do
+        [[ "$t" =~ ^($VALID_SKILLS)$ ]] || bad="$bad $t"
+      done <<<"$toks"
+    done <<<"$items"
+    if [[ -z "$bad" ]]; then record checklist_skills pass ""
+    else record checklist_skills fail "invalid skills values:$bad"; fi
   fi
 fi
 

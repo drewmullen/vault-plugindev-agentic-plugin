@@ -66,12 +66,16 @@ implementation.
    - §5 Security: the secret-material map must enumerate every storage entry
      and response field carrying secrets — cross-check against §3.
    - §6 Checklist: 4-8 coarse-grained items, each declaring `files:` (no
-     creation overlap) and `depends-on:` — where depends-on must name
-     runtime contracts (who provisions the first credential, who owns
+     creation overlap), `depends-on:`, and `skills:` — where depends-on must
+     name runtime contracts (who provisions the first credential, who owns
      client construction, who registers which paths), not just file
-     dependencies. The implement orchestrator plans concurrency from these
-     declarations; an undeclared dependency surfaces as a bug at
-     reconciliation.
+     dependencies, and `skills:` names the activity skill(s) for the item
+     ONLY from the template's closed list (`vault-plugin-config-client`,
+     `vault-plugin-dynamic-roles`, `vault-plugin-dynamic-creds`,
+     `vault-plugin-static-roles`, `vault-plugin-integration-testing`; `—`
+     when none applies). The implement orchestrator plans concurrency and
+     per-item skill loading from these declarations; an undeclared
+     dependency surfaces as a bug at reconciliation.
 
 5. **Validate**: Before writing, confirm:
    - ToC links all 7 sections; every §3 path has all operation rows it supports

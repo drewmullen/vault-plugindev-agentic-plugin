@@ -76,6 +76,7 @@ the workdir (no transcript trust) and exits nonzero on any FAIL:
 | `design_doc` | exactly one `specs/*/design.md` with all 7 section headers |
 | `checklist_complete` | every design §6 checklist item is `[x]` |
 | `checklist_depends_on` | every §6 item declares `depends-on:` |
+| `checklist_skills` | every §6 item declares `skills:` with values from the closed activity-skill list (or `—`) |
 | `leak_check` | clean-room: no precedent-repo mentions (`openldap`, `secrets-terraform`, `vault-plugin-secrets-gcp`, `vault-plugin-secrets-aap`, `hashi-demo-lab`) in design.md; in `research-*.md` only on/after each file's `### Sources` line |
 | `review_report` | `specs/*/reports/review_*.md` exists |
 | `validation_report` | `specs/*/reports/validation_*.md` exists |
