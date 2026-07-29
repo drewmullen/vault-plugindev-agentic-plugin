@@ -77,19 +77,6 @@ to take effect. The *scripts* are executed fresh per tool call, so script
 logic changes apply immediately once wired. Note `disableAllHooks` in
 settings turns these off entirely.
 
-Optional belt-and-suspenders for machine-specific paths (works even with
-hooks disabled) — add to your project's `.claude/settings.json`:
-
-```json
-{
-  "permissions": {
-    "deny": [
-      "Read(//Users/you/go/src/**)"
-    ]
-  }
-}
-```
-
 ## E2E evals
 
 `evals/e2e/` measures the workflows end-to-end: a case runs the full
@@ -104,11 +91,3 @@ evals/e2e/run-eval.sh --case grafana --adapter claude-code  # metered API cost
 ```
 
 See `evals/e2e/README.md` for details and the cost warning.
-
-## Clean-room constraint
-
-Built exclusively from public sources: developer.hashicorp.com/vault,
-the public `hashicorp/vault/sdk` godoc, and public open-source plugin repos
-(`hashicorp/vault-plugin-secrets-openldap`, `hashicorp/vault-plugin-secrets-terraform`,
-`hashicorp/vault-plugin-secrets-gcp`, `hashi-demo-lab/vault-plugin-secrets-aap`).
-No content from private skill collections or internal plugin repositories.
