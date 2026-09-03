@@ -19,12 +19,15 @@ automation; without one the workflows warn and keep everything local.
 
 ## Status
 
-Under active development. Milestone 1 (foundations) is complete:
+Under active development. Milestones 1-5 are complete:
 
 - [x] **M1 Foundations** — plugin scaffold, `AGENTS.md`, core scripts, issue template, secrets constitution
 - [x] **M2 Plan workflow** — clarify taxonomy, design template, research/design agents, `/vault-secrets-plan`
 - [x] **M3 Implement workflow** — architecture/testing knowledge skills, test-writer/developer/validator agents, `/vault-secrets-implement`
-- [ ] **M4+** — auth method workflows, database plugin workflows, e2e evals
+- [x] **M4 E2E eval harness** — headless plan→implement runs, deterministic checks, independent judge, skills-vs-baseline ablation
+- [x] **M5 Integration testing** — opt-in docker-compose target, env-gated acceptance tests, vault dev-server e2e
+- [ ] **M6 Database plugin workflows** — `/vault-db-plan`, `/vault-db-implement` for `dbplugin.Database`
+- [ ] **M7 Auth method workflows** — `/vault-auth-plan`, `/vault-auth-implement`
 
 ## Layout
 

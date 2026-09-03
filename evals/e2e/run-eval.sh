@@ -105,13 +105,21 @@ git -C "$WORKDIR" log --oneline --stat > "$ART/git-log.txt" 2>/dev/null || true
 git -C "$WORKDIR" diff "$SEED_COMMIT" HEAD > "$ART/git-diff.patch" 2>/dev/null || true
 
 # --------------------------------------------------------------- checks -----
+# Baseline runs (no plugin) are graded on the code checks only — a stock session
+# does not emit the SDD artifacts, so gating it on them would be an unfair FAIL.
+CHECK_PROFILE=full
+[[ "$ADAPTER" == "claude-baseline" ]] && CHECK_PROFILE=code
 "$EVAL_ROOT/checks/deterministic.sh" --workdir "$WORKDIR" --out "$OUT/checks.json" \
+  --profile "$CHECK_PROFILE" \
   | tee "$OUT/checks.log" || warn "deterministic checks reported failures"
 [[ -s "$OUT/checks.json" ]] || printf '{"checks":{},"pass":false}\n' > "$OUT/checks.json"
 CHECKS_PASS=$(jq -r '.pass' "$OUT/checks.json")
 
 # ---------------------------------------------------------------- judge -----
-if [[ "$ADAPTER" == "claude-code" ]]; then
+# The judge is measurement infrastructure, not part of the ablation: it runs for
+# every real agent adapter (claude-code AND claude-baseline) so both sides get
+# scored by the same independent grader. Only the free mock adapter skips it.
+if [[ "$ADAPTER" != "mock" ]]; then
   "$EVAL_ROOT/judge/run-judge.sh" --case-dir "$CASE_DIR" --workdir "$WORKDIR" \
     --out-dir "$OUT" --run-status "$RUN_STATUS" || warn "judge had errors"
 else
@@ -234,4 +242,10 @@ GRADE=$(jq -r '.grade' "$OUT/report.json")
 
 log "report: $OUT/report.md"
 log "case $CASE: status=$RUN_STATUS checks_pass=$CHECKS_PASS grade=$GRADE wall=${WALL}s"
+
+# Machine-readable handshake for compare-case.sh: when RUN_DIR_OUT_FILE is set,
+# record this run's output directory there (stdout carries check output, so a
+# dedicated file is the reliable channel).
+[[ -n "${RUN_DIR_OUT_FILE:-}" ]] && printf '%s\n' "$OUT" > "$RUN_DIR_OUT_FILE"
+
 [[ "$GRADE" == "pass" ]]

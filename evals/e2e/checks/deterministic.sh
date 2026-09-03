@@ -3,7 +3,17 @@
 # the workdir for trustworthy exit codes (no transcript parsing) and writes a
 # checks.json summary. Exits nonzero if any check FAILs.
 #
-# Usage: deterministic.sh --workdir <dir> --out <checks.json>
+# Usage: deterministic.sh --workdir <dir> --out <checks.json> [--profile full|code]
+#
+# Profiles:
+#   full (default)  every check below gates the pass — the /vault-secrets-e2e
+#                   workflow is expected to produce all the SDD artifacts.
+#   code            the workflow-artifact checks (design_doc, checklist_*,
+#                   leak_check, review_report, validation_report) record SKIP
+#                   instead of running, so only the code checks gate. Use for
+#                   the claude-baseline adapter: a stock session produces a
+#                   working plugin but not the SDD methodology's artifacts, so
+#                   gating it on those would be an unfair, uninformative FAIL.
 #
 # Checks:
 #   design_doc          exactly one specs/*/design.md with all 7 section headers
@@ -25,15 +35,17 @@ CHECKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "$CHECKS_DIR/../lib/common.sh"
 
-WORKDIR="" OUT=""
+WORKDIR="" OUT="" PROFILE="full"
 while [[ $# -gt 0 ]]; do
   case $1 in
     --workdir) WORKDIR=$2; shift 2 ;;
     --out) OUT=$2; shift 2 ;;
+    --profile) PROFILE=$2; shift 2 ;;
     *) die "deterministic.sh: unknown arg $1" ;;
   esac
 done
-[[ -d "$WORKDIR" && -n "$OUT" ]] || die "usage: deterministic.sh --workdir <dir> --out <checks.json>"
+[[ -d "$WORKDIR" && -n "$OUT" ]] || die "usage: deterministic.sh --workdir <dir> --out <checks.json> [--profile full|code]"
+[[ "$PROFILE" == "full" || "$PROFILE" == "code" ]] || die "deterministic.sh: --profile must be full or code"
 
 # ---- prerequisite: effective Go >= 1.24 (probed in isolation so a workdir
 # ---- with no go.mod doesn't skew the probe) ----
@@ -76,6 +88,16 @@ timed() { # timed <name> <cmd...> — pass/fail from exit code, capture output t
 # Section 6 body of the design doc (between "## 6." and the next "## N.").
 section6() { awk '/^## 6\./{f=1; next} /^## [0-9]/{f=0} f' "$1"; }
 checklist_items() { section6 "$1" | grep -E '^[[:space:]]*[-*] \[.\]' || true; }
+
+if [[ "$PROFILE" == "code" ]]; then
+  # Baseline profile: a stock session is not expected to emit the SDD artifacts.
+  # Record them as SKIP (counts as pass for the gate) so only the code checks
+  # decide the outcome; the judge supplies the quality comparison.
+  for c in design_doc checklist_complete checklist_depends_on checklist_skills \
+           leak_check review_report validation_report; do
+    record "$c" skip "profile=code (baseline)"
+  done
+else
 
 # ---- (a) design doc: exactly one, all 7 section headers ----
 DESIGN=""
@@ -191,6 +213,8 @@ if compgen -G "$WORKDIR/specs/*/reports/validation_*.md" >/dev/null; then
 else
   record validation_report fail "no specs/*/reports/validation_*.md"
 fi
+
+fi  # end profile==full workflow-artifact checks
 
 # ---- (g) gofmt -l empty ----
 GOFMT_BIN=$(command -v gofmt || true)
