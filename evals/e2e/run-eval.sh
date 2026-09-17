@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Single-case e2e eval lifecycle for the vault-plugindev workflows:
 #   provision throwaway workdir (git init, NO remote → GitHub degradation mode)
-#   → adapter runs /vault-secrets-e2e headlessly → harvest artifacts
+#   → adapter runs /vault-secrets-e2e or /vault-db-e2e headlessly (per the
+#     case's `workflow` file) → harvest artifacts
 #   → deterministic checks → judge (claude-code adapter only)
 #   → report.json + report.md under evals/e2e/runs/<timestamp>-<case>/
 #
@@ -42,6 +43,16 @@ CASE_DIR="$EVAL_ROOT/cases/$CASE"
 PROMPT_SRC="$CASE_DIR/prompt.md"
 ADAPTER_BIN="$EVAL_ROOT/adapters/$ADAPTER.sh"
 [[ -f "$PROMPT_SRC" ]] || die "case prompt not found: $PROMPT_SRC"
+# Workflow selection: cases/<name>/workflow holds "secrets" (default) or "db".
+# Exported so the adapters pick the matching /vault-<workflow>-e2e skill (and
+# the mock fabricates a matching design); the judge derives the rubric from
+# the design's H1 instead.
+EVAL_WORKFLOW=secrets
+if [[ -f "$CASE_DIR/workflow" ]]; then
+  EVAL_WORKFLOW=$(tr -d '[:space:]' < "$CASE_DIR/workflow")
+fi
+[[ "$EVAL_WORKFLOW" == "secrets" || "$EVAL_WORKFLOW" == "db" ]] || die "cases/$CASE/workflow must be 'secrets' or 'db' (got '$EVAL_WORKFLOW')"
+export EVAL_WORKFLOW
 [[ -x "$ADAPTER_BIN" ]] || die "adapter not found/executable: $ADAPTER_BIN"
 command -v jq >/dev/null || die "jq is required"
 command -v git >/dev/null || die "git is required"

@@ -39,9 +39,9 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
    Ask via `AskUserQuestion` if any is missing. **Database-shape check**: if
    the request is "manage users/credentials in a database" (Postgres, MySQL,
    MongoDB, etc. via SQL/driver), tell the user that database plugins use the
-   `dbplugin.Database` interface, which this workflow does not generate (a
-   dedicated workflow is planned), and ask whether to stop or proceed with a
-   logical secrets engine deliberately.
+   `dbplugin.Database` interface, which `/vault-db-plan` generates, and ask
+   whether to stop and run that workflow or proceed with a logical secrets
+   engine deliberately.
 3. Create GitHub issue (skip in degradation mode): read
    `${CLAUDE_PLUGIN_ROOT}/.claude/skills/vault-secrets-plan/references/issue-body-template.md`,
    fill the placeholders, and run
@@ -93,8 +93,9 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
    and writes `specs/{FEATURE}/research-{slug}.md`. Verify the files exist
    via Glob — do NOT read their contents. Re-launch any missing one once.
    **Leak gate** (mechanical — do not rely on agent compliance): run
-   `grep -n -iE 'vault-plugin-(secrets|auth|database)-[a-z-]+|openldap' specs/{FEATURE}/research-*.md`
-   and discard hits that fall under a `### Sources` heading. Any remaining
+   `grep -n -iE 'vault-plugin-(secrets|auth|database)-[a-z0-9-]+|openldap' specs/{FEATURE}/research-*.md`
+   and discard hits that fall under a `### Sources` heading or that are the
+   plugin's OWN module/binary name (`vault-plugin-*-{name}`). Any remaining
    hit: Edit that line to describe the pattern generically (no repo names)
    before Phase 2 — the design agent must never see precedent names outside
    Sources, and the eval leak check fails the run on them.
@@ -117,7 +118,8 @@ The `<step_name>` must be a short hyphenated identifier (e.g., `"clarify"`,
     `vault-plugin-dynamic-creds`, `vault-plugin-static-roles`,
     `vault-plugin-integration-testing`); and the design must not name
     precedent plugin repos anywhere (same grep as the Phase 1 leak gate, no
-    Sources exemption here). On failure: derive `files:`/`depends-on:` from
+    Sources exemption here; the plugin's own module/binary name stays
+    exempt — never rewrite the Go Module line to dodge the grep). On failure: derive `files:`/`depends-on:` from
     the item text and ordering, and `skills:` from the item's `files:`
     (path_config/client → config-client, path_roles → dynamic-roles,
     creds/secret_ → dynamic-creds, static → static-roles, harness →

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-hoc deterministic gates for a /vault-secrets-e2e run. Re-runs tools in
+# Post-hoc deterministic gates for a /vault-secrets-e2e or /vault-db-e2e run. Re-runs tools in
 # the workdir for trustworthy exit codes (no transcript parsing) and writes a
 # checks.json summary. Exits nonzero if any check FAILs.
 #
@@ -17,10 +17,12 @@
 #
 # Checks:
 #   design_doc          exactly one specs/*/design.md with all 7 section headers
+#                       (header set chosen by the H1: Secrets Engine / Database Plugin)
 #   checklist_complete  every §6 checklist item is checked [x]
 #   checklist_depends_on every §6 item declares depends-on:
 #   checklist_skills    every §6 item declares skills: from the closed activity-skill list
-#   leak_check          no clean-room precedent-repo names outside research Sources
+#   leak_check          no precedent-repo names (any vault-plugin-* except the
+#                       plugin's own) in design.md or outside research Sources
 #   review_report       specs/*/reports/review_*.md exists
 #   validation_report   specs/*/reports/validation_*.md exists
 #   gofmt               gofmt -l on the workdir is empty
@@ -60,7 +62,25 @@ if [[ -z "$major" || -z "$minor" ]] || ! { [[ "$major" -gt 1 ]] || { [[ "$major"
   die "effective Go toolchain is '${GOVER:-unknown}' — >= 1.24 required (install a newer go or enable GOTOOLCHAIN=auto)"
 fi
 
-LEAK_PATTERN='openldap|secrets-terraform|vault-plugin-secrets-gcp|vault-plugin-secrets-aap|hashi-demo-lab'
+# Same definition as hooks/gate-spec-writes.sh: any vault-plugin-* name or
+# clean-room source org counts, EXCEPT the plugin's own module/binary name
+# (derived from the design's '**Go Module**' line and the feature dir's
+# short name), which the design must state.
+LEAK_PATTERN='vault-plugin-(secrets|auth|database)-[a-z0-9-]+|openldap|hashi-demo-lab|plugins/database/'
+own_names() { # own_names <spec-file> → ERE alternation of own names, or empty
+  local dir names mod short
+  dir="$(dirname "$1")"; names=""
+  mod="$(grep -m1 -E '^\*\*Go Module\*\*' "$dir/design.md" 2>/dev/null \
+    | grep -oE 'vault-plugin-(secrets|auth|database)-[a-z0-9-]+' | head -n1)"
+  [[ -n "$mod" ]] && names="$mod"
+  short="$(basename "$dir" | sed -E 's/^[0-9]+-//' | tr -cd 'a-z0-9-')"
+  [[ -n "$short" ]] && names="${names:+$names|}vault-plugin-(secrets|auth|database)-$short"
+  printf '%s' "$names"
+}
+scrub() { # scrub <spec-file> → contents with own names blanked, line count preserved
+  local own; own="$(own_names "$1")"
+  if [[ -n "$own" ]]; then sed -E "s/($own)([^a-z0-9-]|\$)/\2/g" "$1"; else cat "$1"; fi
+}
 
 RESULTS='{}'
 FAILED=0
@@ -107,7 +127,15 @@ if [[ "$design_count" != "1" ]]; then
 else
   DESIGN=$(find "$WORKDIR/specs" -mindepth 2 -maxdepth 2 -name design.md | head -1)
   missing=""
-  for header in "## 1. Purpose" "## 2. External API" "## 3. Backend Interface" \
+  # The H1 selects the workflow's header set: secrets engines use
+  # "External API" / "Backend Interface"; database plugins use
+  # "Target System Integration" / "Plugin Interface Contract".
+  if grep -q '^# Database Plugin Design' "$DESIGN"; then
+    h2="## 2. Target System Integration"; h3="## 3. Plugin Interface Contract"
+  else
+    h2="## 2. External API"; h3="## 3. Backend Interface"
+  fi
+  for header in "## 1. Purpose" "$h2" "$h3" \
                 "## 4. Credential Lifecycle" "## 5. Security Controls" \
                 "## 6. Implementation Checklist" "## 7. Open Questions"; do
     grep -q "^$header" "$DESIGN" || missing="$missing '$header'"
@@ -149,7 +177,7 @@ else
 fi
 
 # ---- (c2) every §6 item declares skills: from the closed list ----
-VALID_SKILLS='vault-plugin-config-client|vault-plugin-dynamic-roles|vault-plugin-dynamic-creds|vault-plugin-static-roles|vault-plugin-integration-testing'
+VALID_SKILLS='vault-plugin-config-client|vault-plugin-dynamic-roles|vault-plugin-dynamic-creds|vault-plugin-static-roles|vault-plugin-integration-testing|vault-dbplugin-connection|vault-dbplugin-users|vault-dbplugin-rotation|vault-dbplugin-integration-testing'
 if [[ -z "$DESIGN" ]]; then
   record checklist_skills fail "no design doc"
 else
@@ -164,7 +192,7 @@ else
     bad=""
     while IFS= read -r line; do
       decl=${line#*skills:}
-      toks=$(grep -oE 'vault-plugin-[a-z-]+' <<<"$decl" || true)
+      toks=$(grep -oE 'vault-(db)?plugin-[a-z-]+' <<<"$decl" || true)
       if [[ -z "$toks" ]]; then
         # no skill named — the declaration must be the explicit none marker
         grep -q '—' <<<"$decl" || bad="$bad <empty>"
@@ -186,12 +214,12 @@ if [[ -z "$DESIGN" ]]; then
   record leak_check fail "no design doc"
 else
   leaks=""
-  if grep -qiE "$LEAK_PATTERN" "$DESIGN"; then
+  if scrub "$DESIGN" | grep -qiE "$LEAK_PATTERN"; then
     leaks="design.md"
   fi
   while IFS= read -r rf; do
     [[ -n "$rf" ]] || continue
-    first_hit=$(grep -inE "$LEAK_PATTERN" "$rf" | head -1 | cut -d: -f1)
+    first_hit=$(scrub "$rf" | grep -inE "$LEAK_PATTERN" | head -1 | cut -d: -f1)
     [[ -n "$first_hit" ]] || continue
     sources_line=$(grep -n -m1 '^### Sources' "$rf" | cut -d: -f1)
     if [[ -z "$sources_line" ]] || [[ "$first_hit" -lt "$sources_line" ]]; then

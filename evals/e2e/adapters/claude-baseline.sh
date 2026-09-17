@@ -11,7 +11,7 @@
 #
 # Prompt: the case file is written for the /vault-secrets-e2e skill, which does
 # not exist here. This adapter DERIVES a vanilla build request from it — the
-# `## Engine Request` through (but not including) `## Workflow Instructions`
+# `## Engine Request` (or `## Plugin Request`) through (but not including) `## Workflow Instructions`
 # span (Engine Request + any Target API spec + Test Defaults), under a neutral
 # preamble that pins the same repo layout the workflow uses so harvest, the
 # deterministic code checks, and the judge all work unchanged.
@@ -52,14 +52,20 @@ command -v claude >/dev/null || die "claude CLI not found on PATH"
 # the skill-invocation line, and the "## Workflow Instructions" section (which
 # references the orchestrator skills that do not exist in a baseline run).
 requirements=$(awk '
-  /^## Engine Request/        { keep = 1 }
-  /^## Workflow Instructions/ { keep = 0 }
-  keep                        { print }
+  /^## (Engine|Plugin) Request/ { keep = 1 }
+  /^## Workflow Instructions/   { keep = 0 }
+  keep                          { print }
 ' "$PROMPT_FILE")
-[[ -n "$requirements" ]] || die "claude-baseline.sh: no '## Engine Request' section in $PROMPT_FILE"
+[[ -n "$requirements" ]] || die "claude-baseline.sh: no '## Engine Request' / '## Plugin Request' section in $PROMPT_FILE"
+
+# EVAL_WORKFLOW (secrets|db) comes from run-eval.sh via the case's `workflow` file.
+case "${EVAL_WORKFLOW:-secrets}" in
+  db) WHAT="database plugin (implementing the public sdk/database/dbplugin/v5 Database interface: Initialize, NewUser, UpdateUser, DeleteUser, Type, Close — served with dbplugin.ServeMultiplex)" ;;
+  *)  WHAT="secrets engine plugin" ;;
+esac
 
 PROMPT_TEXT=$(cat <<EOF
-You are building a production-grade HashiCorp Vault secrets engine plugin in Go.
+You are building a production-grade HashiCorp Vault $WHAT in Go.
 
 Work directly in the current working directory, which is a fresh git repository.
 Put the Go source files and \`go.mod\` at the REPOSITORY ROOT — do not create a

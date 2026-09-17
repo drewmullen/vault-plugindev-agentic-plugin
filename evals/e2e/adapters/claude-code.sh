@@ -10,8 +10,9 @@
 # and `${CLAUDE_PLUGIN_ROOT}` inside the skills resolves to the plugin root —
 # no copying into the workdir needed.
 #
-# The prompt sent is `/vault-secrets-e2e <prompt-file>` — the non-interactive
-# harness skill reads the case prompt (engine request + Test Defaults) itself.
+# The prompt sent is `/vault-<workflow>-e2e <prompt-file>` (workflow from
+# EVAL_WORKFLOW: secrets or db) — the non-interactive harness skill reads the
+# case prompt (request + Test Defaults) itself.
 #
 # Produces in O:
 #   agent-envelope.json — raw `--output-format json` result envelope
@@ -51,7 +52,9 @@ case "$PROMPT_FILE" in
   "$WORKDIR"/*) prompt_ref="${PROMPT_FILE#"$WORKDIR"/}" ;;
 esac
 
-args=(-p "/vault-secrets-e2e $prompt_ref"
+# EVAL_WORKFLOW (secrets|db) comes from run-eval.sh via the case's `workflow` file.
+E2E_SKILL="/vault-${EVAL_WORKFLOW:-secrets}-e2e"
+args=(-p "$E2E_SKILL $prompt_ref"
   --output-format json
   --plugin-dir "$PLUGIN_ROOT"
   --dangerously-skip-permissions)

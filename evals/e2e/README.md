@@ -42,7 +42,8 @@ the judge on a cheap model, `EVAL_TIMEOUT_SECS` to bound the run (default
 cases/<name>/prompt.md ──► throwaway workdir (mktemp; git init + seed commit;
                            NO GitHub remote → workflows' degradation mode
                            skips issue/PR steps)
-                       ──► adapter runs `/vault-secrets-e2e <prompt>` headlessly
+                       ──► adapter runs `/vault-<workflow>-e2e <prompt>` headlessly
+                           (workflow = cases/<name>/workflow: secrets | db)
                        ──► harvest: specs/, *.go, go.mod, git log + diff
                             → runs/<ts>-<case>/artifacts/
                        ──► checks/deterministic.sh (see below)
@@ -190,3 +191,13 @@ block answering every clarify question (credential model, security defaults,
 Go module org, integration environment — keep it fakes-only so runs never
 need live systems). Optional `cases/<name>/assertions.md` adds per-case judge
 assertions. Style-match `cases/grafana/prompt.md`.
+
+**Workflow selection**: an optional `cases/<name>/workflow` file containing
+`secrets` (default) or `db` picks the harness skill (`/vault-secrets-e2e` or
+`/vault-db-e2e`). A `db` case's prompt uses a `## Plugin Request` section
+and Test Defaults for the database clarify slots (credential features &
+types, statements contract, security defaults, Go module org). The
+deterministic design check selects the header set from the design's H1,
+the spec-write hook and `checklist_skills` accept both closed skill lists,
+and the judge picks the `vault-database-plugin` rubric from the same H1.
+Style-match `cases/smoke-db/prompt.md`.
