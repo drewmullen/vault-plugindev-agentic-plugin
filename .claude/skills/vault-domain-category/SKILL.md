@@ -19,8 +19,8 @@ requirements. Each category is scanned and marked: Clear / Partial / Missing.
 - Core success criteria ("a Vault client can obtain X and it works against Y")
 - Explicit out-of-scope declarations
 - Database-shaped detection: if the request is "manage users/credentials in a
-  database via SQL/driver" it belongs to a `dbplugin.Database` workflow, not
-  this one — flag it before anything else
+  database via SQL/driver" it belongs to the `dbplugin.Database` workflow
+  (`/vault-db-plan`), not this one — flag it before anything else
 
 ### 2. Credential Model & Data
 

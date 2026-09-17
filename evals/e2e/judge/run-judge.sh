@@ -49,9 +49,17 @@ fi
 run_incomplete=false
 [[ "$RUN_STATUS" == "timeout" || "$RUN_STATUS" == "error" ]] && run_incomplete=true
 
+# Rubric selection from the design's H1 (the judge agent does the same).
+RUBRIC="vault-secrets-engine"; KIND="secrets-engine"; D1_NAME="Backend & Path Design"; E2E_SKILL="/vault-secrets-e2e"
+CONTRACT_HINT="§3 paths/storage tables"
+if grep -qs '^# Database Plugin Design' "$WORKDIR"/specs/*/design.md 2>/dev/null; then
+  RUBRIC="vault-database-plugin"; KIND="database-plugin"; D1_NAME="Interface & Config Design"; E2E_SKILL="/vault-db-e2e"
+  CONTRACT_HINT="§3 config-field / statements / method-contract tables"
+fi
+
 cat > "$OUT/judge-prompt.md" <<EOF
 You are the **vault-e2e-judge** agent for this session: an independent,
-read-only grader of a completed /vault-secrets-e2e workflow run. You share no
+read-only grader of a completed $E2E_SKILL ($KIND) workflow run. You share no
 context with the run. Follow the agent contract exactly:
 
 1. Read-only. Never write, edit, or mutate anything. Bash only for
@@ -77,11 +85,12 @@ $assertions
 
 ## Method
 
-1. Load the \`vault-judge-criteria\` skill. Use its 6 secrets-engine
-   dimensions, weights, scoring formula, and the Security (D2) < 5.0
+1. Load the \`vault-judge-criteria\` skill. Use its **$RUBRIC** rubric —
+   6 dimensions, weights, scoring formula, and the Security (D2) < 5.0
    "Not Production Ready" override.
 2. Read \`specs/*/design.md\`, then the Go code, then \`git log\`. Cross-check
-   the design's §3/§4 scenario tables and §6 checklist against what was built.
+   the design's $CONTRACT_HINT, §4 scenario tables, and §6 checklist against
+   what was built.
 3. Evaluate each per-case assertion strictly: \`pass\` only with cited evidence.
 4. Score all 6 dimensions with file:line evidence, compute the weighted
    overall score (one decimal), and classify top issues by P0-P3 severity.
@@ -90,9 +99,9 @@ $assertions
 
 \`\`\`json
 {
-  "rubric": "vault-secrets-engine",
+  "rubric": "$RUBRIC",
   "dimensions": {
-    "d1": {"name": "Backend & Path Design", "score": 8.0, "issues": ["..."]},
+    "d1": {"name": "$D1_NAME", "score": 8.0, "issues": ["..."]},
     "d2": {"name": "Security & Compliance", "score": 7.5, "issues": []},
     "d3": {"name": "Code Quality", "score": 8.0, "issues": []},
     "d4": {"name": "Credential Lifecycle", "score": 8.0, "issues": []},

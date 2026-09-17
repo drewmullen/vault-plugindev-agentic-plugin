@@ -1,0 +1,5 @@
+- secretValues() maps the configured password to a placeholder and is exercised by a sanitizer test through NewDatabaseErrorSanitizerMiddleware
+- DeleteUser returns nil when the target reports the user does not exist (idempotent revoke)
+- UpdateUser on the root username updates both the decoded config and the raw config map and rebuilds the client
+- NewUser rejects a non-password CredentialType before any client call
+- No Vault framework paths, storage entries, leases, or WAL exist in the plugin

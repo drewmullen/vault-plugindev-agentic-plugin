@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Single-case e2e eval lifecycle for the vault-plugindev workflows:
 #   provision throwaway workdir (git init, NO remote → GitHub degradation mode)
-#   → adapter runs /vault-secrets-e2e headlessly → harvest artifacts
+#   → adapter runs /vault-secrets-e2e or /vault-db-e2e headlessly (per the
+#     case's `workflow` file) → harvest artifacts
 #   → deterministic checks → judge (claude-code adapter only)
 #   → report.json + report.md under evals/e2e/runs/<timestamp>-<case>/
 #
@@ -42,6 +43,16 @@ CASE_DIR="$EVAL_ROOT/cases/$CASE"
 PROMPT_SRC="$CASE_DIR/prompt.md"
 ADAPTER_BIN="$EVAL_ROOT/adapters/$ADAPTER.sh"
 [[ -f "$PROMPT_SRC" ]] || die "case prompt not found: $PROMPT_SRC"
+# Workflow selection: cases/<name>/workflow holds "secrets" (default) or "db".
+# Exported so the adapters pick the matching /vault-<workflow>-e2e skill (and
+# the mock fabricates a matching design); the judge derives the rubric from
+# the design's H1 instead.
+EVAL_WORKFLOW=secrets
+if [[ -f "$CASE_DIR/workflow" ]]; then
+  EVAL_WORKFLOW=$(tr -d '[:space:]' < "$CASE_DIR/workflow")
+fi
+[[ "$EVAL_WORKFLOW" == "secrets" || "$EVAL_WORKFLOW" == "db" ]] || die "cases/$CASE/workflow must be 'secrets' or 'db' (got '$EVAL_WORKFLOW')"
+export EVAL_WORKFLOW
 [[ -x "$ADAPTER_BIN" ]] || die "adapter not found/executable: $ADAPTER_BIN"
 command -v jq >/dev/null || die "jq is required"
 command -v git >/dev/null || die "git is required"
@@ -105,13 +116,21 @@ git -C "$WORKDIR" log --oneline --stat > "$ART/git-log.txt" 2>/dev/null || true
 git -C "$WORKDIR" diff "$SEED_COMMIT" HEAD > "$ART/git-diff.patch" 2>/dev/null || true
 
 # --------------------------------------------------------------- checks -----
+# Baseline runs (no plugin) are graded on the code checks only — a stock session
+# does not emit the SDD artifacts, so gating it on them would be an unfair FAIL.
+CHECK_PROFILE=full
+[[ "$ADAPTER" == "claude-baseline" ]] && CHECK_PROFILE=code
 "$EVAL_ROOT/checks/deterministic.sh" --workdir "$WORKDIR" --out "$OUT/checks.json" \
+  --profile "$CHECK_PROFILE" \
   | tee "$OUT/checks.log" || warn "deterministic checks reported failures"
 [[ -s "$OUT/checks.json" ]] || printf '{"checks":{},"pass":false}\n' > "$OUT/checks.json"
 CHECKS_PASS=$(jq -r '.pass' "$OUT/checks.json")
 
 # ---------------------------------------------------------------- judge -----
-if [[ "$ADAPTER" == "claude-code" ]]; then
+# The judge is measurement infrastructure, not part of the ablation: it runs for
+# every real agent adapter (claude-code AND claude-baseline) so both sides get
+# scored by the same independent grader. Only the free mock adapter skips it.
+if [[ "$ADAPTER" != "mock" ]]; then
   "$EVAL_ROOT/judge/run-judge.sh" --case-dir "$CASE_DIR" --workdir "$WORKDIR" \
     --out-dir "$OUT" --run-status "$RUN_STATUS" || warn "judge had errors"
 else
@@ -234,4 +253,10 @@ GRADE=$(jq -r '.grade' "$OUT/report.json")
 
 log "report: $OUT/report.md"
 log "case $CASE: status=$RUN_STATUS checks_pass=$CHECKS_PASS grade=$GRADE wall=${WALL}s"
+
+# Machine-readable handshake for compare-case.sh: when RUN_DIR_OUT_FILE is set,
+# record this run's output directory there (stdout carries check output, so a
+# dedicated file is the reliable channel).
+[[ -n "${RUN_DIR_OUT_FILE:-}" ]] && printf '%s\n' "$OUT" > "$RUN_DIR_OUT_FILE"
+
 [[ "$GRADE" == "pass" ]]

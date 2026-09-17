@@ -42,7 +42,8 @@ the judge on a cheap model, `EVAL_TIMEOUT_SECS` to bound the run (default
 cases/<name>/prompt.md ──► throwaway workdir (mktemp; git init + seed commit;
                            NO GitHub remote → workflows' degradation mode
                            skips issue/PR steps)
-                       ──► adapter runs `/vault-secrets-e2e <prompt>` headlessly
+                       ──► adapter runs `/vault-<workflow>-e2e <prompt>` headlessly
+                           (workflow = cases/<name>/workflow: secrets | db)
                        ──► harvest: specs/, *.go, go.mod, git log + diff
                             → runs/<ts>-<case>/artifacts/
                        ──► checks/deterministic.sh (see below)
@@ -66,10 +67,51 @@ install needed. The case prompt file is copied into the workdir
 (`eval-prompt.md`) so the plugin's out-of-tree file-access hook allows the
 skill to read it; the prompt sent is `/vault-secrets-e2e eval-prompt.md`.
 
+## Baseline comparison (no-skills ablation)
+
+To measure the lift the plugin actually provides, run the same case through a
+**stock Claude Code session with no plugin loaded** and diff it against a
+skills run. The only difference between the two is `--plugin-dir` — same
+model, same requirements, same judge — so the delta isolates the plugin.
+
+```bash
+# one command: runs BOTH adapters for a case, same model, writes the diff.
+# METERED — two workflow sessions + two judge sessions. Pin --model.
+evals/e2e/compare-case.sh --case grafana --model claude-sonnet-4-5
+
+# already have a skills run for this case? reuse it, run only the baseline:
+evals/e2e/compare-case.sh --case grafana --model claude-sonnet-4-5 --skip-skills
+
+# diff any two existing run dirs after the fact ($0 — reads report.json only):
+evals/e2e/compare-runs.sh runs/<skills-run> runs/<baseline-run>
+```
+
+`compare-case.sh` writes `runs/<ts>-<case>-compare/comparison.md`; each
+underlying run keeps its own full run dir. `compare-runs.sh` **warns** (never
+aborts) if the two runs are different cases or different models — either makes
+the delta mean something other than "the plugin".
+
+How the baseline differs from the skills run:
+
+| | `--adapter claude-code` (skills) | `--adapter claude-baseline` (stock) |
+|---|---|---|
+| Plugin | `--plugin-dir <repo>` — skills, agents, hooks | **none** |
+| Prompt | `/vault-secrets-e2e <file>` | the case's Engine Request + Test Defaults under a neutral "build this plugin here" preamble (derived from the same `prompt.md`) |
+| Check profile | `full` (all gates) | `code` (workflow-artifact gates → SKIP; only gofmt/build/vet/test gate) |
+| Judge | yes | yes (same independent judge) |
+
+**The comparison axis is judge scores + code gates, not `grade`.** A stock
+session produces a working plugin but not the SDD design/checklist/report
+artifacts, so those checks are SKIP for a baseline by design — gating on them
+would be an uninformative FAIL. Both sides still get the same judge, so
+`judge.overall` and the six dimensions are the honest quality delta.
+
 ## Deterministic checks
 
-`checks/deterministic.sh --workdir D --out checks.json` re-runs real tools in
-the workdir (no transcript trust) and exits nonzero on any FAIL:
+`checks/deterministic.sh --workdir D --out checks.json [--profile full|code]`
+re-runs real tools in the workdir (no transcript trust) and exits nonzero on
+any FAIL. `--profile code` records the seven workflow-artifact checks as SKIP
+and gates only on the four code checks (used for baseline runs):
 
 | Check | Asserts |
 |---|---|
@@ -95,7 +137,8 @@ reading the workflow's own review/validation reports (anchoring), scoring
 the 6 `vault-judge-criteria` dimensions plus any per-case assertions from
 `cases/<name>/assertions.md` (optional file, one `- assertion` per line).
 It must reply with a single JSON verdict (one retry, then the report records
-`judge_error`). The judge runs only for the claude-code adapter.
+`judge_error`). The judge runs for every real agent adapter (`claude-code`
+and `claude-baseline`); only the free `mock` adapter skips it.
 
 ## Runtime adapters
 
@@ -107,7 +150,9 @@ adapters/<name>.sh run --prompt-file F --workdir D --out-dir O --timeout-secs N 
 ```
 
 and writes a normalized `agent-result.json`. `claude-code.sh` is the real
-runtime (raw envelope kept as `agent-envelope.json`); `mock.sh` fabricates a
+runtime (raw envelope kept as `agent-envelope.json`); `claude-baseline.sh` is
+the same runtime with **no `--plugin-dir`** and a derived vanilla prompt (the
+no-skills ablation — see Baseline comparison above); `mock.sh` fabricates a
 passing run for free pipeline tests:
 
 - `MOCK_FAIL=1 evals/e2e/run-eval.sh ...` — the mock agent dies without
@@ -146,3 +191,13 @@ block answering every clarify question (credential model, security defaults,
 Go module org, integration environment — keep it fakes-only so runs never
 need live systems). Optional `cases/<name>/assertions.md` adds per-case judge
 assertions. Style-match `cases/grafana/prompt.md`.
+
+**Workflow selection**: an optional `cases/<name>/workflow` file containing
+`secrets` (default) or `db` picks the harness skill (`/vault-secrets-e2e` or
+`/vault-db-e2e`). A `db` case's prompt uses a `## Plugin Request` section
+and Test Defaults for the database clarify slots (credential features &
+types, statements contract, security defaults, Go module org). The
+deterministic design check selects the header set from the design's H1,
+the spec-write hook and `checklist_skills` accept both closed skill lists,
+and the judge picks the `vault-database-plugin` rubric from the same H1.
+Style-match `cases/smoke-db/prompt.md`.

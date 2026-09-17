@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runtime adapter: mock. Fabricates what a successful /vault-secrets-e2e run
+# Runtime adapter: mock. Fabricates what a successful /vault-secrets-e2e (or,
+# with EVAL_WORKFLOW=db, /vault-db-e2e) run
 # leaves behind, for $0, so the whole pipeline (runner → harvest → checks →
 # judge-skip → report) can be exercised without an agent.
 #
@@ -41,7 +42,7 @@ write_result() { # write_result <exit_code> <status>
       cost_usd: 0.0, duration_ms: 31000, wall_time_s: 31, num_turns: 42,
       session_id: "mock-session", model: $model, is_error: ($status != "passed"),
       result_text: (if $status == "passed"
-        then "E2E secrets engine test complete. Status: PASSED."
+        then (if env.EVAL_WORKFLOW == "db" then "E2E database plugin test complete. Status: PASSED." else "E2E secrets engine test complete. Status: PASSED." end)
         else "mock agent failure (MOCK_FAIL=1)" end)
     }' > "$OUT/agent-result.json"
 }
@@ -58,6 +59,61 @@ SPEC="$WORKDIR/specs/$FEATURE"
 STAMP="$(date +%Y%m%d)-0000"
 mkdir -p "$SPEC/reports"
 
+if [[ "${EVAL_WORKFLOW:-secrets}" == "db" ]]; then
+cat > "$SPEC/design.md" <<'EOF'
+# Database Plugin Design: mock-db
+
+**Branch**: 001-mock
+**Status**: Approved
+**Go Module**: example.com/mock-db
+**Plugin Type**: `mock`
+
+## 1. Purpose & Requirements
+
+Mock database plugin design fabricated by the eval mock adapter. Manages
+nothing; exists so the deterministic checks have a complete artifact to gate.
+
+**Credential features**: dynamic users + root self-rotation — fabricated.
+
+## 2. Target System Integration
+
+Mock admin API. Basic auth; create/set-password/delete user endpoints; 404
+on delete treated as success.
+
+## 3. Plugin Interface Contract
+
+Config fields `connection_url`, `username`, `password` (secret). Supported
+credential types: password. Statements: JSON `{"roles":[...]}`.
+
+## 4. Credential Lifecycle
+
+NewUser renders the username template and creates the user; DeleteUser is
+idempotent; UpdateUser changes passwords and adopts the root password in
+memory on self-rotation.
+
+### Enterprise-Dependent Behavior
+
+| Feature (Vault core) | Plugin sees | Plugin behavior when feature is off |
+|----------------------|-------------|-------------------------------------|
+| Automated root rotation | `UpdateUser(Password)` with Username = root | Never called; manual rotate-root is identical |
+
+## 5. Security Controls
+
+- Secret material map: `password` config field only
+- secretValues() list: `password`
+- No statement or secret value is logged at any level
+
+## 6. Implementation Checklist
+
+- [x] **A: Connection & config** — files: database.go, client.go; depends-on: —; skills: vault-dbplugin-connection
+- [x] **B: Users** — files: users.go; depends-on: A (client seam); skills: vault-dbplugin-users
+- [x] **C: Rotation** — files: rotation.go; depends-on: A (owns in-memory config); skills: vault-dbplugin-rotation
+
+## 7. Open Questions
+
+None — all resolved.
+EOF
+else
 cat > "$SPEC/design.md" <<'EOF'
 # Secrets Engine Design: mock-engine
 
@@ -110,6 +166,8 @@ with WAL-before-external-mutation ordering.
 
 None — all resolved.
 EOF
+
+fi
 
 cat > "$SPEC/clarifications.md" <<'EOF'
 # Clarifications (mock)

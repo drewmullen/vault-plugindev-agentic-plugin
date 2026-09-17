@@ -352,15 +352,13 @@ mkdir -p "$FEATURE_DIR"
 
 # The design file starts empty: its structure comes from the design-template
 # knowledge skill loaded by the design agent, not from a file in this plugin.
+# Every workflow uses design.md: the spec-write hook, the eval-mode Stop gate,
+# and the deterministic checks all key on specs/*/design.md and tell the
+# workflows apart by the document's H1 (Secrets Engine Design / Database
+# Plugin Design), not by filename.
 case "$WORKFLOW_TYPE" in
-    secrets)
+    secrets|auth|db)
         DESIGN_FILE="$FEATURE_DIR/design.md"
-        ;;
-    auth)
-        DESIGN_FILE="$FEATURE_DIR/auth-design.md"
-        ;;
-    db)
-        DESIGN_FILE="$FEATURE_DIR/db-design.md"
         ;;
 esac
 touch "$DESIGN_FILE"

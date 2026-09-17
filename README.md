@@ -19,12 +19,15 @@ automation; without one the workflows warn and keep everything local.
 
 ## Status
 
-Under active development. Milestone 1 (foundations) is complete:
+Under active development. Milestones 1-5 are complete:
 
 - [x] **M1 Foundations** — plugin scaffold, `AGENTS.md`, core scripts, issue template, secrets constitution
 - [x] **M2 Plan workflow** — clarify taxonomy, design template, research/design agents, `/vault-secrets-plan`
 - [x] **M3 Implement workflow** — architecture/testing knowledge skills, test-writer/developer/validator agents, `/vault-secrets-implement`
-- [ ] **M4+** — auth method workflows, database plugin workflows, e2e evals
+- [x] **M4 E2E eval harness** — headless plan→implement runs, deterministic checks, independent judge, skills-vs-baseline ablation
+- [x] **M5 Integration testing** — opt-in docker-compose target, env-gated acceptance tests, vault dev-server e2e
+- [x] **M6 Database plugin workflows** — `/vault-db-plan`, `/vault-db-implement` for `dbplugin.Database`, with their own constitution, design template, taxonomy, activity skills, agents, and e2e harness
+- [ ] **M7 Auth method workflows** — `/vault-auth-plan`, `/vault-auth-implement`
 
 ## Layout
 
@@ -32,10 +35,24 @@ Under active development. Milestone 1 (foundations) is complete:
 .claude-plugin/plugin.json           # Claude Code plugin manifest
 .claude/
 ├── CLAUDE.md                        # pointer to AGENTS.md
-├── agents/                          # vault-secrets-research, vault-secrets-design (+M3)
+├── agents/                          # vault-secrets-* and vault-db-* (research, design,
+│                                    # test-writer, developer, reviewer, validator) + vault-e2e-judge
 └── skills/
     ├── vault-secrets-plan/          # orchestrator + references/issue-body-template.md
     ├── vault-secrets-implement/     # orchestrator (TDD build + validate)
+    ├── vault-secrets-e2e/           # headless eval harness (secrets)
+    ├── vault-db-plan/               # orchestrator + references/issue-body-template.md (database)
+    ├── vault-db-implement/          # orchestrator (database)
+    ├── vault-db-e2e/                # headless eval harness (database)
+    ├── vault-db-constitution/       # non-negotiable rules for dbplugin.Database code (knowledge)
+    ├── vault-db-domain-category/    # clarify-phase taxonomy for database plugins (knowledge)
+    ├── vault-db-design-template/    # database design.md structure (knowledge)
+    ├── vault-dbplugin-architecture/ # struct, New()+sanitizer, seam, ServeMultiplex (knowledge)
+    ├── vault-dbplugin-connection/   # Initialize/config/secretValues/Close (activity)
+    ├── vault-dbplugin-users/        # NewUser/DeleteUser + statements (activity)
+    ├── vault-dbplugin-rotation/     # UpdateUser + root self-rotation (activity)
+    ├── vault-dbplugin-testing/      # direct-method tests + fake client (knowledge)
+    ├── vault-dbplugin-integration-testing/ # opt-in live harness via database/ engine (activity)
     ├── vault-secrets-constitution/  # non-negotiable codegen rules (knowledge)
     ├── vault-domain-category/       # clarify-phase ambiguity taxonomy (knowledge)
     ├── vault-secrets-design-template/ # design.md structure (knowledge)
@@ -46,8 +63,8 @@ Under active development. Milestone 1 (foundations) is complete:
     ├── vault-plugin-static-roles/   # static roles + rotation queue (activity)
     ├── vault-plugin-testing/        # test harness + fake patterns (knowledge)
     ├── vault-plugin-integration-testing/ # opt-in live test harness patterns (knowledge)
-    ├── vault-judge-criteria/        # quality scoring rubric (knowledge)
-    └── vault-report-template/       # Phase 4 report format (knowledge)
+    ├── vault-judge-criteria/        # quality rubrics: secrets + database (knowledge)
+    └── vault-report-template/       # Phase 4 report format, two coverage tables (knowledge)
 scripts/bash/                        # validate-env, create-new-feature,
                                      # checkpoint-commit, post-issue-progress
                                      # (run via ${CLAUDE_PLUGIN_ROOT}/scripts/bash/)
@@ -80,7 +97,8 @@ settings turns these off entirely.
 ## E2E evals
 
 `evals/e2e/` measures the workflows end-to-end: a case runs the full
-`/vault-secrets-plan → /vault-secrets-implement` cycle headlessly in a
+plan → implement cycle (`/vault-secrets-*` or `/vault-db-*`, chosen by the
+case's `workflow` file) headlessly in a
 throwaway workdir, applies deterministic checks (design structure, checklist,
 clean-room leak check, gofmt/build/vet/test), optionally grades quality with
 an independent judge agent, and reports wall time / cost / results.
@@ -88,6 +106,7 @@ an independent judge agent, and reports wall time / cost / results.
 ```bash
 evals/e2e/run-eval.sh --case grafana --adapter mock         # $0 pipeline test
 evals/e2e/run-eval.sh --case grafana --adapter claude-code  # metered API cost
+evals/e2e/run-eval.sh --case smoke-db --adapter mock        # database workflow, $0
 ```
 
 See `evals/e2e/README.md` for details and the cost warning.

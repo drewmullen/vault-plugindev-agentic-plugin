@@ -1,7 +1,7 @@
 {
   "name": "vault-plugindev",
   "displayName": "Vault Plugin Development Workflows",
-  "description": "Spec-driven plan/implement workflows, skills, and subagents for developing HashiCorp Vault secrets engine plugins from an idea plus a target API.",
+  "description": "Spec-driven plan/implement workflows, skills, and subagents for developing HashiCorp Vault plugins from an idea plus a target system: secrets engines (framework.Backend) and database plugins (dbplugin.Database).",
   "version": "0.1.0",
   "author": {
     "name": "Drew Mullen",
@@ -15,11 +15,19 @@
     "./.claude/agents/vault-secrets-developer.md",
     "./.claude/agents/vault-secrets-reviewer.md",
     "./.claude/agents/vault-secrets-validator.md",
+    "./.claude/agents/vault-db-research.md",
+    "./.claude/agents/vault-db-design.md",
+    "./.claude/agents/vault-db-test-writer.md",
+    "./.claude/agents/vault-db-developer.md",
+    "./.claude/agents/vault-db-reviewer.md",
+    "./.claude/agents/vault-db-validator.md",
     "./.claude/agents/vault-e2e-judge.md"
   ],
   "keywords": [
     "vault",
     "secrets-engine",
+    "database-plugin",
+    "dbplugin",
     "sdd",
     "go",
     "plugin-development"

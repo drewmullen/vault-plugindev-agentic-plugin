@@ -29,9 +29,11 @@
 
 This repository is a **Vault plugin development template** using **SDD**
 (Spec-Driven Development, 4-phase workflow: Clarify, Design, Implement,
-Validate). It generates HashiCorp Vault **secrets engine** plugins in Go from
-a basic idea plus a target external API. Auth method and database plugin
-workflows are planned follow-ons.
+Validate). It generates HashiCorp Vault plugins in Go from a basic idea plus
+a target system: **secrets engines** (`framework.Backend`, from an external
+API) and **database plugins** (`dbplugin.Database`, the per-database
+executor behind Vault's `database/` engine). Auth method workflows are a
+planned follow-on.
 
 Workflows run **inside the user's own repository**: plugin code is generated
 at the repo root, and spec artifacts live under `specs/{FEATURE}/`. GitHub
@@ -57,46 +59,60 @@ expansion tricks.
 | -------------------------- | -------------------------------------------------------------------- | --------- |
 | `/vault-secrets-plan`      | SDD Phases 1-2: Clarify, Research, Design — stops for human approval | Available |
 | `/vault-secrets-implement` | SDD Phases 3-4: TDD implementation + validation, opens PR            | Available |
+| `/vault-db-plan`           | SDD Phases 1-2 for database plugins (`dbplugin.Database`) — human gate | Available |
+| `/vault-db-implement`      | SDD Phases 3-4 for database plugins: TDD build + validation, PR      | Available |
 | `/vault-auth-plan`         | Same, for auth method plugins                                        | Planned   |
 | `/vault-auth-implement`    | Same, for auth method plugins                                        | Planned   |
-| `/vault-db-plan`           | Same, for database plugins (`dbplugin.Database` interface)           | Planned   |
-| `/vault-db-implement`      | Same, for database plugins                                           | Planned   |
 
 ## Component Inventory
 
-**Agents** — in `.claude/agents/` (auth/db columns planned):
+**Agents** — in `.claude/agents/` (auth column planned):
 
-| Role        | Secrets                      |
-| ----------- | ---------------------------- |
-| Research    | `vault-secrets-research`     |
-| Design      | `vault-secrets-design`       |
-| Test writer | `vault-secrets-test-writer`  |
-| Developer   | `vault-secrets-developer`    |
-| Reviewer    | `vault-secrets-reviewer`     |
-| Validator   | `vault-secrets-validator`    |
+| Role        | Secrets                      | Database                |
+| ----------- | ---------------------------- | ----------------------- |
+| Research    | `vault-secrets-research`     | `vault-db-research`     |
+| Design      | `vault-secrets-design`       | `vault-db-design`       |
+| Test writer | `vault-secrets-test-writer`  | `vault-db-test-writer`  |
+| Developer   | `vault-secrets-developer`    | `vault-db-developer`    |
+| Reviewer    | `vault-secrets-reviewer`     | `vault-db-reviewer`     |
+| Validator   | `vault-secrets-validator`    | `vault-db-validator`    |
 
 Eval-only (not part of workflow orchestration): `vault-e2e-judge` —
-independent read-only judge for e2e eval runs, used by
-`evals/e2e/judge/run-judge.sh`.
+independent read-only judge for e2e eval runs of either workflow (rubric
+selected by the design's H1), used by `evals/e2e/judge/run-judge.sh`.
 
 **Skills** — in `.claude/skills/`:
+
+Secrets engine workflow:
 
 - Orchestrators: `vault-secrets-plan`, `vault-secrets-implement`
 - Knowledge packs: `vault-secrets-constitution`, `vault-domain-category`,
   `vault-secrets-design-template`, `vault-plugin-architecture`,
-  `vault-plugin-testing`, `vault-plugin-integration-testing`,
-  `vault-judge-criteria`, `vault-report-template`
+  `vault-plugin-testing`, `vault-plugin-integration-testing`
 - Activity packs (per design §6 checklist item; loaded by the developer at
   runtime, by reviewer/validator via frontmatter):
   `vault-plugin-config-client`, `vault-plugin-dynamic-roles`,
   `vault-plugin-dynamic-creds`, `vault-plugin-static-roles`
-- Eval harness: `vault-secrets-e2e` — non-interactive plan→implement cycle
-  driven by a case prompt file (used by `evals/e2e/`)
+- Eval harness: `vault-secrets-e2e`
+
+Database plugin workflow:
+
+- Orchestrators: `vault-db-plan`, `vault-db-implement`
+- Knowledge packs: `vault-db-constitution`, `vault-db-domain-category`,
+  `vault-db-design-template`, `vault-dbplugin-architecture`,
+  `vault-dbplugin-testing`
+- Activity packs: `vault-dbplugin-connection`, `vault-dbplugin-users`,
+  `vault-dbplugin-rotation`, `vault-dbplugin-integration-testing`
+- Eval harness: `vault-db-e2e`
+
+Shared by both: `vault-judge-criteria` (two rubrics, selected by design
+H1), `vault-report-template` (two coverage tables).
 
 ## E2E workflow evals — `evals/e2e/`
 
-End-to-end evals for the secrets workflow live in `evals/e2e/` (see
-`evals/e2e/README.md`). Each case runs a full plan→implement cycle headlessly
+End-to-end evals for both workflows live in `evals/e2e/` (see
+`evals/e2e/README.md`; a case's `workflow` file selects `secrets` or `db`).
+Each case runs a full plan→implement cycle headlessly
 in a throwaway local git workdir (no remote — GitHub degradation mode),
 applies deterministic checks (design structure, checklist, clean-room leak
 check, gofmt/build/vet/test), optionally grades with the independent
@@ -124,16 +140,20 @@ plugin repo, so nothing may rely on repo-relative paths into this repo.
 
 ## Constitution
 
-Non-negotiable rules for all generated plugin code live in the
-**`vault-secrets-constitution`** knowledge skill. Load it before designing,
-generating, or reviewing secrets engine code.
+Non-negotiable rules for generated plugin code live in the
+**`vault-secrets-constitution`** (secrets engines) and
+**`vault-db-constitution`** (database plugins) knowledge skills. Load the
+matching one before designing, generating, or reviewing plugin code.
 
 ## Design Templates
 
 Design document structure ships as knowledge skills:
 
 - **Secrets engine design**: `vault-secrets-design-template` skill
-- **Issue body**: `.claude/skills/vault-secrets-plan/references/issue-body-template.md`
+- **Database plugin design**: `vault-db-design-template` skill (same seven
+  `## N.` headers shape; H1 `# Database Plugin Design:` distinguishes it)
+- **Issue bodies**: `.claude/skills/vault-secrets-plan/references/issue-body-template.md`,
+  `.claude/skills/vault-db-plan/references/issue-body-template.md`
 
 ## Key Scripts
 
@@ -149,8 +169,8 @@ All in `scripts/bash/`, invoked as
 
 ## Context Management
 
-These rules apply to ALL workflows. Replace `{workflow}` with `secrets`
-(later: `auth`, `db`).
+These rules apply to ALL workflows. Replace `{workflow}` with `secrets` or
+`db` (later: `auth`).
 
 1. **NEVER call TaskOutput** to read subagent results. ALL agents — including
    research agents — write artifacts to disk. The orchestrator verifies
